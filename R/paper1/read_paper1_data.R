@@ -1,15 +1,17 @@
+library(Matrix)
+
 # Read paper1 dataset (matrix, gene names, barcodes), returns sorted gene matrix
 read_paper1_data = function() {
   # read gene data matrix
-  gene_sorted_matrix = readMM('./expression/601ae2f4771a5b0d72588bfb/gene_sorted-matrix.mtx.gz')
+  gene_sorted_matrix = readMM('data/SCP1290/expression/601ae2f4771a5b0d72588bfb/gene_sorted-matrix.mtx.gz')
   
   # read gene names
-  genes = read.table('./expression/601ae2f4771a5b0d72588bfb/genes.tsv', sep="\t", header=FALSE)
+  genes = read.table('data/SCP1290/expression/601ae2f4771a5b0d72588bfb/genes.tsv', sep="\t", header=FALSE)
   gene_names = genes[,1]
   head(gene_names)
   
   # read barcodes
-  barcodes = read.table('./expression/601ae2f4771a5b0d72588bfb/barcodes.tsv', sep="\t", header=FALSE)
+  barcodes = read.table('data/SCP1290/expression/601ae2f4771a5b0d72588bfb/barcodes.tsv', sep="\t", header=FALSE)
   barcode_names = barcodes[,1]
   
   # Set the row names of gene_sorted_matrix to gene identifiers
@@ -23,7 +25,7 @@ read_paper1_data = function() {
 
 # read formatted gene metadata
 read_paper1_metadata = function() {
-  metadata = read.table('./metadata/metaData_scDevSC.txt', sep="\t", header=TRUE, quote='')
+  metadata = read.table('data/SCP1290/metadata/metaData_scDevSC.txt', sep="\t", header=TRUE, quote='')
   metadata = metadata[-1,]
   colnames(metadata)[colnames(metadata) == "seurat_clusters"] <- "seurat_clusters_orig"
   

@@ -1,17 +1,11 @@
 #install.packages('Seurat')
-#install.packages('DoubletFinder')
-#library('DoubletFinder')
+
 library('Seurat')
-library('Matrix')
 library('ggplot2')
 library(dplyr)
 
-source('plot_feature_set.R')
-
-source('celltype_markers.R')
-source('read_paper1_data.R')
-
-source('add_celltype_markers_score.R')
+source('R/shared/index.R')
+source('R/paper1/read_paper1_data.R')
 
 # read experiment data and metadata
 gene_data = read_paper1_data()
@@ -124,7 +118,7 @@ for (cluster in names(cluster_marker_lists)) {
   }
 }
 
-source('assign_cell_types.R')
+# gather celltype assignment lists
 celltype_assignments = assign_cell_types(cluster_marker_lists, celltype_marker_lists)
 celltype_assignments
 print(celltype_assignments)
@@ -139,4 +133,5 @@ DoHeatmap(sobj, features = top10$gene) + NoLegend()
 celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
+# Heatmap for epigenetic modifiers
 DoHeatmap(sobj, features = epigenetic_modifiers) + NoLegend()

@@ -1,3 +1,5 @@
+library(Seurat)
+
 # return the markers score column name for the given celltype
 celltype_markers_score_col_name <- function(celltype) {
   return(paste0(celltype, '_markers_score'))

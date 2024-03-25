@@ -1,4 +1,4 @@
-# celltype names using in paper1
+# celltype names used in paper1
 celltypes = c(
   'Apical progenitors',
   'Astrocytes',

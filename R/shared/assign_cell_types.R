@@ -1,3 +1,5 @@
+# WIP: datastructure printing is not nice
+
 # Function to assign cell types to clusters based on marker overlap
 assign_cell_types <- function(cluster_marker_lists, celltype_marker_lists) {
   # Initialize a list to hold the cell type assignments for each cluster

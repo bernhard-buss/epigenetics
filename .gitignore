@@ -1,12 +1,14 @@
-# ignored folders
-data
-plots
+# ignore data
+data/*
+# ignore generated outputs
+output/*
 
-# ignored R Studio files
+# ignore R Studio files
 .RData
 .Rhistory
+.Rproj.user
+
 *.RData
 *.rds
-
 
 !**/.gitkeep

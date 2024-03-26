@@ -6,11 +6,11 @@ library(patchwork)
 library(Matrix)
 
 #Importing dataset:
-metad <- read.table("data/GSE204759_mouse_scRNA_metadata.txt", sep="\t", header=T, quote='')
+metad <- read.table("data/paper2/GSE204759_mouse_scRNA_metadata.txt", sep="\t", header=T, quote='')
 head(metad)
 rownames(metad)<-metad$cellId
 
-matrix <- readRDS("data/GSE204759_mouse_scRNA_raw_counts.rds")
+matrix <- readRDS("data/paper2/GSE204759_mouse_scRNA_raw_counts.rds")
 head(matrix)
 
 
@@ -63,7 +63,7 @@ DimPlot(seurato, reduction="umap", group.by = "seurat_clusters", label=T)
 # Find all markers of each cluster
 #markers <- FindAllMarkers(seurato, only.pos=T, min.pct=0.5, logfc.threshold=0.7, test.use='wilcox', p.adjust.method='bonferroni', min.diff.pct = 0.5)
 #saveRDS(markers,"Documents/Neuroepigenetics/markers.rds")
-markers <- readRDS("data/markers.rds")
+markers <- readRDS("tmp/markers.rds")
 #genenames <- rownames(markers)
 #genenames
 

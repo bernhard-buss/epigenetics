@@ -1,15 +1,11 @@
-# ignore data
-data/*
 # ignore generated outputs
 output/*
+tmp/*
 
 # ignore R Studio files
 .RData
 .Rhistory
 .Rproj.user
-
-*.RData
-*.rds
 
 #system files
 .DS_Store

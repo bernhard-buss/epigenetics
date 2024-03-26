@@ -11,4 +11,7 @@ output/*
 *.RData
 *.rds
 
+#system files
+.DS_Store
+
 !**/.gitkeep

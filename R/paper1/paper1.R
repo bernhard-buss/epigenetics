@@ -6,6 +6,7 @@ library(dplyr)
 
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
+source('R/paper1/celltypes_paper1.R')
 
 # Create Seurat object with min genes = 500
 sobj1 <- setup_seurat(

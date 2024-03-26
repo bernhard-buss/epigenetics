@@ -6,11 +6,11 @@ library(patchwork)
 library(Matrix)
 
 #Importing dataset:
-metad <- read.table("GSE204759_mouse_scRNA_metadata.txt", sep="\t", header=T, quote='')
+metad <- read.table("data/GSE204759_mouse_scRNA_metadata.txt", sep="\t", header=T, quote='')
 head(metad)
 rownames(metad)<-metad$cellId
 
-matrix <- readRDS("GSE204759_mouse_scRNA_raw_counts.rds")
+matrix <- readRDS("data/GSE204759_mouse_scRNA_raw_counts.rds")
 head(matrix)
 
 
@@ -63,7 +63,7 @@ DimPlot(seurato, reduction="umap", group.by = "seurat_clusters", label=T)
 # Find all markers of each cluster
 #markers <- FindAllMarkers(seurato, only.pos=T, min.pct=0.5, logfc.threshold=0.7, test.use='wilcox', p.adjust.method='bonferroni', min.diff.pct = 0.5)
 #saveRDS(markers,"Documents/Neuroepigenetics/markers.rds")
-markers <- readRDS("markers.rds")
+markers <- readRDS("data/markers.rds")
 #genenames <- rownames(markers)
 #genenames
 
@@ -78,7 +78,7 @@ FeaturePlot(seurato, features = CPN_markers , ncol = 2, order = TRUE)
 VlnPlot(seurato, features = CPN_markers, ncol = 2)
 
 #Function (marker_sets), does featureplots & violinplots & saves as image
-source("plot_marker_set.R")
+source("R/shared/plot_marker_set.R")
 plot_marker_set(seurato, CPN_markers, "CPN")
 plot_marker_set(seurato, CThPN_markers, "CThPN")
 plot_marker_set(seurato, PN_markers, "PN")
@@ -87,7 +87,7 @@ plot_marker_set(seurato, Oligo_markers, "Oligo")
 plot_marker_set(seurato, Astros_markers, "Astro")
 
 # umaps of gene expression
-source("add_celltype_markers_score.R")
+source("R/shared/add_celltype_markers_score.R")
 seurato <- add_celltype_markers_score(seurato, CPN_markers, "CPN")
 FeaturePlot(seurato, features=c(celltype_markers_score_col_name("CPN")))
 

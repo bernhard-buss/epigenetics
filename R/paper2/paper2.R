@@ -81,26 +81,4 @@ DoHeatmap(object=sobj2, features = IN_markers) + NoLegend()
 DoHeatmap(object=sobj2, features = Oligo_markers) + NoLegend()
 DoHeatmap(object=sobj2, features = Astro_markers) + NoLegend()
 
-
-# find all markers of cluster 1
-#cluster1.markers <- FindMarkers(sobj2, ident.1 = 2)
-#head(cluster1.markers, n = 5)
-
-# subset giving cluster IDs -> differential cluster analysis
-
-
-
-
-
-
-
-
-
-
-
-# supplementary matrix, umaps per time point
-# genetic modifiers: Genes list by Rodrigo
-# negativemarkers (f.e. from progenitors)
-# plot that simply shows as much info at once as possible (time, cell typs)
-# define specific goals
-
+# Marker gene expression by cell

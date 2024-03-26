@@ -1,5 +1,6 @@
 # ignore generated outputs
 output/*
+data/*
 tmp/*
 
 # ignore R Studio files

@@ -7,52 +7,20 @@ library(dplyr)
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
 
-project = 'paper1'
-
-# read experiment data and metadata
-gene_data = read_paper1_data()
-metadata = read_paper1_metadata()
-
 # Create Seurat object with min genes = 500
-sobj <- CreateSeuratObject(counts = gene_data, project = project)
-sobj <- AddMetaData(sobj, metadata=metadata)
+sobj1 <- setup_seurat(
+  project='paper1',
+  counts=read_paper1_data(),
+  metadata=read_paper1_metadata()
+)
 
 # Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
 #sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
 #sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes)
-sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
+sobj1 <- subset(sobj1, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
 
-# Normalize
-sobj <- NormalizeData(sobj, normalization.method = "LogNormalize", scale.factor = 10000)
+sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
 
-# Find Variable Features
-sobj <- FindVariableFeatures(sobj, selection.method = "vst", nfeatures = 3000)
-
-# Identify the 10 most highly variable genes
-top10 <- head(VariableFeatures(sobj), 10)
-
-# plot variable features with and without labels
-plot1 <- VariableFeaturePlot(sobj)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-plot2
-
-# Scale data
-#sobj <- ScaleData(sobj, vars.to.regress = c('nCount_RNA', 'nFeature_RNA', 'percent_mito', 'CC_Difference'), do.centre=TRUE, do.scale=TRUE)
-#saveRDS(sobj, file="sobj_scaled_full_paper.rds")
-#sobj <- ScaleData(sobj, vars.to.regress = c('nCount_RNA', 'nFeature_RNA', 'percent_mito'), do.scale=TRUE)
-sobj <- ScaleData(sobj)
-
-
-# PCA
-sobj <- RunPCA(sobj, features = VariableFeatures(object = sobj))
-DimPlot(sobj, reduction = "pca") + NoLegend()
-ElbowPlot(sobj, ndims=50)
-
-sobj <- FindNeighbors(sobj, dims = 1:50)
-sobj <- FindClusters(sobj, algorithm = 1, method = 'matrix', resolution=1)
-
-# UMAP
-sobj <- RunUMAP(sobj, dims = 1:50)
 DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters_orig')
 DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 

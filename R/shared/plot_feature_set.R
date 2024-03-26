@@ -1,7 +1,7 @@
 library(Seurat)
 library(ggplot2)
 
-source('filenames.R')
+source('R/shared/filenames.R')
 
 plot_feature_set <- function(sobj, features, feature_set_name, ncol = 2, dpi = 72, pixelsPerRow = 300, pixelsPerCol = 300) {
   # Calculate the height dynamically based on the number of features

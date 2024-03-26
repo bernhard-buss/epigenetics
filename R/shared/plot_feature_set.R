@@ -1,6 +1,8 @@
 library(Seurat)
 library(ggplot2)
 
+source('filenames.R')
+
 plot_feature_set <- function(sobj, features, feature_set_name, ncol = 2, dpi = 72, pixelsPerRow = 300, pixelsPerCol = 300) {
   # Calculate the height dynamically based on the number of features
   num_features <- length(features)
@@ -10,11 +12,11 @@ plot_feature_set <- function(sobj, features, feature_set_name, ncol = 2, dpi = 7
   
   # Create and save the FeaturePlot
   f_plot <- FeaturePlot(sobj, features = features, ncol = ncol, order = TRUE) + NoLegend()
-  feature_png_filename <- paste0('output/figures/', feature_set_name, "_feature_plot.png")
+  feature_png_filename <- figure_filename(sobj@project.name, paste0(feature_set_name, "_feature_plot.png"))
   ggsave(feature_png_filename, plot = f_plot, width = plot_width_px/dpi, height = plot_height_px/dpi, dpi = dpi)
   
   # Create and save the VlnPlot
   vln_plot <- VlnPlot(sobj, features = features, ncol = ncol)
-  violin_png_filename <- paste0('output/figures/', feature_set_name, "_vln_plot.png")
+  violin_png_filename <- figure_filename(sobj@project.name, paste0(feature_set_name, "_vln_plot.png"))
   ggsave(violin_png_filename, plot = vln_plot, width = plot_width_px/dpi, height = plot_height_px/dpi, dpi = dpi)
 }

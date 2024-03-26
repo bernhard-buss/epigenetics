@@ -7,12 +7,14 @@ library(dplyr)
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
 
+project = 'paper1'
+
 # read experiment data and metadata
 gene_data = read_paper1_data()
 metadata = read_paper1_metadata()
 
 # Create Seurat object with min genes = 500
-sobj <- CreateSeuratObject(counts = gene_data, project = "Gene Expressions")
+sobj <- CreateSeuratObject(counts = gene_data, project = project)
 sobj <- AddMetaData(sobj, metadata=metadata)
 
 # Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
@@ -32,7 +34,7 @@ top10 <- head(VariableFeatures(sobj), 10)
 # plot variable features with and without labels
 plot1 <- VariableFeaturePlot(sobj)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-plot1 + plot2
+plot2
 
 # Scale data
 #sobj <- ScaleData(sobj, vars.to.regress = c('nCount_RNA', 'nFeature_RNA', 'percent_mito', 'CC_Difference'), do.centre=TRUE, do.scale=TRUE)
@@ -51,10 +53,16 @@ sobj <- FindClusters(sobj, algorithm = 1, method = 'matrix', resolution=1)
 
 # UMAP
 sobj <- RunUMAP(sobj, dims = 1:50)
-DimPlot(sobj, reduction = "umap", group.by = 'orig_ident')
 DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters_orig')
-DimPlot(sobj, reduction = "umap", group.by = 'New_cellType', label = TRUE, repel = TRUE) + NoLegend()
 DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
+
+origIdentPlot <- DimPlot(sobj, reduction = "umap", group.by = 'orig_ident')
+origIdentPlot
+
+cellTypePlot <- DimPlot(sobj, reduction = "umap", group.by = 'New_cellType', label = TRUE, repel = TRUE) + NoLegend()
+cellTypePlot
+ggsave(figure_filename(sobj@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
+
 
 # Look at cluster IDs of the first 5 cells
 head(Idents(sobj), 5)

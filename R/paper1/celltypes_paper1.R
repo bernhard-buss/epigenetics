@@ -1,5 +1,5 @@
 # celltype names used in paper1
-celltypes = c(
+celltypes_paper1 = c(
   'Apical progenitors',
   'Astrocytes',
   'Cajal Retzius cells',

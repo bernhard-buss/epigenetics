@@ -22,40 +22,40 @@ sobj1 <- subset(sobj1, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_
 
 sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
 
-DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters_orig')
-DimPlot(sobj, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
+DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')
+DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 
-origIdentPlot <- DimPlot(sobj, reduction = "umap", group.by = 'orig_ident')
+origIdentPlot <- DimPlot(sobj1, reduction = "umap", group.by = 'orig_ident')
 origIdentPlot
 
-cellTypePlot <- DimPlot(sobj, reduction = "umap", group.by = 'New_cellType', label = TRUE, repel = TRUE) + NoLegend()
+cellTypePlot <- DimPlot(sobj1, reduction = "umap", group.by = 'New_cellType', label = TRUE, repel = TRUE) + NoLegend()
 cellTypePlot
-ggsave(figure_filename(sobj@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
+ggsave(figure_filename(sobj1@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
 
 
 # Look at cluster IDs of the first 5 cells
-head(Idents(sobj), 5)
+head(Idents(sobj1), 5)
 
 # Loop over the list, create a FeaturePlot for each set of markers, and save as PNG
 for (celltype in names(celltype_marker_lists)) {
-  plot_feature_set(sobj, celltype_marker_lists[[celltype]], celltype)
+  plot_feature_set(sobj1, celltype_marker_lists[[celltype]], celltype)
 }
 
 # add markers_score for all celltypes
 for (celltype in names(celltype_marker_lists)) {
-  sobj <- add_celltype_markers_score(sobj, celltype_marker_lists[[celltype]], celltype)
+  sobj1 <- add_celltype_markers_score(sobj1, celltype_marker_lists[[celltype]], celltype)
 }
 # plot all celltype markers score in one PNG file
 celltype_markers_score_features = sapply(names(celltype_marker_lists), celltype_markers_score_col_name)
-plot_feature_set(sobj, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
+plot_feature_set(sobj1, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
 
 # find all markers of cluster 1
-cluster1.markers <- FindMarkers(sobj, ident.1 = 2)
+cluster1.markers <- FindMarkers(sobj1, ident.1 = 2)
 head(cluster1.markers, n = 5)
 
 # Find all markers
 all_markers <- FindAllMarkers(
-  object = sobj,
+  object = sobj1,
   only.pos = TRUE, # Consider only positive markers
   min.pct = 0.50, #0.25, # Gene must be detected in at least 25% of cells within a cluster
   #min.diff.pct = 0.5,
@@ -106,9 +106,9 @@ all_markers %>%
   slice_head(n = 10) %>%
   ungroup() -> top10
 top10$gene
-DoHeatmap(sobj, features = top10$gene) + NoLegend()
+DoHeatmap(sobj1, features = top10$gene) + NoLegend()
 celltype_marker_lists['cpnLayer23']
-DoHeatmap(sobj, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
+DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 # Heatmap for epigenetic modifiers
-DoHeatmap(sobj, features = epigenetic_modifiers) + NoLegend()
+DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()

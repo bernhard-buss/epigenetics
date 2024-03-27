@@ -18,3 +18,19 @@ epigenetics/
     ├── figures/              # Generated figures
     └── tables/               # Generated tables
 ```
+
+## Single Cell Processed Data
+
+### Paper1: Molecular logic of cellular diversification in the mouse cerebral cortex
+The processed single cell RNA data from E10-E18, P1, and P4 from Di Bella & Habibi, et al. can be downloaded from the Broad Single-cell Portal ([SCP1290](https://singlecell.broadinstitute.org/single_cell/study/SCP1290/molecular-logic-of-cellular-diversification-in-the-mammalian-cerebral-cortex)).
+
+**Gene Expression Omnibus (GEO)**
+- SuperSeries: [GSE153164](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE153164)
+- SubSeries scRNA-seq: [GSE153162](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE153162)
+- SubSeries scATAC-seq: [GSE153163](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE153163)
+
+### Paper2: Temporally-Divergent Regulatory Mechanisms Govern Neuronal Diversification and Maturation in the Neocortex
+**Gene Expression Omnibus (GEO)**
+- SuperSeries: [GSE204851](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE204851)
+- SubSeries scRNA-seq: [GSE204759](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE204759)
+- scATAC-seq: [GSE111586](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE111586)

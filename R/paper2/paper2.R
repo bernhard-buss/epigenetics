@@ -9,25 +9,47 @@ source('R/paper2/read_paper2_data.R')
 source('R/shared/index.R')
 
 sobj2 <- setup_seurat(
-  project='paper2',
-  counts=read_paper2_data(),
-  metadata=read_paper2_metadata()
+  project = 'paper2',
+  counts = read_paper2_data(),
+  metadata = read_paper2_metadata()
 )
 
-sobj2 <- subset(sobj2, subset=percent.mito<0.1 & nGene<6000 & nGene>1000 & nUMI<15000)
 
+# Filter mito %, genes # & nUMI
+sobj2 <- subset(sobj2, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
+
+# Clustering (Normalizing, Scaling, PCA, Neighbours)
 sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 
 # Cluster Identification
-DimPlot(sobj2, reduction="umap", group.by = "CellType", split.by="timePoint", label=T, repel=TRUE) + NoLegend() 
-DimPlot(sobj2, reduction="umap", group.by = "timePoint")
-DimPlot(sobj2, reduction="umap", group.by = "combId")
-DimPlot(sobj2, reduction="umap", group.by = "seurat_clusters", label=T)
-# Look at cluster IDs of the first 5 cells ?
-# head(Idents(sobj2), 5) ?
+# DimPlot(sobj2, reduction="umap", group.by = "CellType")
+# DimPlot(sobj2, reduction="umap", group.by = "timePoint")
+# DimPlot(sobj2, reduction="umap", group.by = "combId")
+# DimPlot(sobj2, reduction="umap", group.by = "seurat_clusters", label=T)
+CT_TP_plot <- DimPlot(sobj2, reduction="umap", group.by = "CellType", split.by="timePoint", label=T, repel=TRUE) + NoLegend() 
+CT_TP_plot
+ggsave(figure_filename(sobj2@project.name, 'CellTypeTimePoint_plot'), plot = CT_TP_plot, width = 10, height = 8, dpi = 300)
 
-# Average expression for each cluster
-# -> Compute joint cell type scores, for each cluster & potential identity 
+# Look at cluster IDs of the first 5 cells
+# head(Idents(sobj2), 5)
+
+# Loop over the list, create a FeaturePlot for each set of markers & save as PNG
+for (celltype in names(celltype_marker_lists)) {
+  plot_feature_set(sobj2, celltype_marker_lists[[celltype]], celltype)
+}
+
+# add markers_score for all celltypes
+for (celltype in names(celltype_marker_lists)) {
+  sobj2 <- add_celltype_markers_score(sobj2, celltype_marker_lists[[celltype]], celltype)
+}
+
+# plot all celltype markers score in one PNG file
+celltype_markers_score_features = sapply(names(celltype_marker_lists), celltype_markers_score_col_name)
+plot_feature_set(sobj2, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
+
+# find all markers of cluster 1
+# cluster1.markers <- FindMarkers(sobj2, ident.1 = 2)
+# head(cluster1.markers, n = 5)
 
 # Find all markers of each cluster
 #markers <- FindAllMarkers(sobj2, only.pos=T, min.pct=0.5, logfc.threshold=0.7, test.use='wilcox', p.adjust.method='bonferroni', min.diff.pct = 0.5)

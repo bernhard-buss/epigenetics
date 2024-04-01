@@ -123,56 +123,49 @@ all_markers %>%
   slice_head(n = 10) %>%
   ungroup() -> top10
 top10$gene
-DoHeatmap(sobj1, features = top10$gene) + NoLegend()
+DoHeatmap(sobj2, features = top10$gene) + NoLegend()
 celltype_marker_lists['cpnLayer23']
-DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
+DoHeatmap(sobj2, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 # Heatmap for epigenetic modifiers
-DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()
+DoHeatmap(sobj2, features = epigenetic_modifiers) + NoLegend()
 
-
-
-
-
-
-
-
-FeaturePlot(sobj2, features = CPN_markers , ncol = 2, order = TRUE)
-VlnPlot(sobj2, features = CPN_markers, ncol = 2)
+#FeaturePlot(sobj2, features = CPN_markers , ncol = 2, order = TRUE)
+#VlnPlot(sobj2, features = CPN_markers, ncol = 2)
 
 #Function (marker_sets), does featureplots & violinplots & saves as image
-plot_feature_set(sobj2, CPN_markers, "CPN")
-plot_feature_set(sobj2, CThPN_markers, "CThPN")
-plot_feature_set(sobj2, PN_markers, "PN")
-plot_feature_set(sobj2, IN_markers, "IN")
-plot_feature_set(sobj2, Oligo_markers, "Oligo")
-plot_feature_set(sobj2, Astros_markers, "Astro")
+#plot_feature_set(sobj2, CPN_markers, "CPN")
+#plot_feature_set(sobj2, CThPN_markers, "CThPN")
+#plot_feature_set(sobj2, PN_markers, "PN")
+#plot_feature_set(sobj2, IN_markers, "IN")
+#plot_feature_set(sobj2, Oligo_markers, "Oligo")
+#plot_feature_set(sobj2, Astros_markers, "Astro")
 
 # umaps of gene expression
-sobj2 <- add_celltype_markers_score(sobj2, CPN_markers, "CPN")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("CPN")))
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("CPN")))
+#sobj2 <- add_celltype_markers_score(sobj2, CPN_markers, "CPN")
 
-sobj2 <- add_celltype_markers_score(sobj2, CThPN_markers, "CThPN")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("CThPN")))
+#sobj2 <- add_celltype_markers_score(sobj2, CThPN_markers, "CThPN")
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("CThPN")))
 
-sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "PN")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("PN")))
+#sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "PN")
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("PN")))
 
-sobj2 <- add_celltype_markers_score(sobj2, IN_markers, "IN")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("IN")))
+#sobj2 <- add_celltype_markers_score(sobj2, IN_markers, "IN")
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("IN")))
 
-sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "Oligo")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("Oligo")))
+#sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "Oligo")
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("Oligo")))
 
-sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "Astro")
-FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("Astro")))
+#sobj2 <- add_celltype_markers_score(sobj2, PN_markers, "Astro")
+#FeaturePlot(sobj2, features=c(celltype_markers_score_col_name("Astro")))
 
 # Heatmaps
-DoHeatmap(object=sobj2, features = CPN_markers) + NoLegend()
-DoHeatmap(object=sobj2, features = CThPN_markers) + NoLegend()
-DoHeatmap(object=sobj2, features = PN_markers) + NoLegend()
-DoHeatmap(object=sobj2, features = IN_markers) + NoLegend()
-DoHeatmap(object=sobj2, features = Oligo_markers) + NoLegend()
-DoHeatmap(object=sobj2, features = Astro_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = CPN_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = CThPN_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = PN_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = IN_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = Oligo_markers) + NoLegend()
+#DoHeatmap(object=sobj2, features = Astro_markers) + NoLegend()
 
 # Marker gene expression by cell

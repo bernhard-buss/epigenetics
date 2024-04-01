@@ -59,7 +59,7 @@ plot_feature_set(sobj2, celltype_markers_score_features, 'celltype_markers_score
 # IN_markers <- c("Gad2", 'Tubb3', 'Dlx2', 'Gad1')
 # Oligo_markers <- c("Pdgfra", 'Olig1', 'Cst3', 'Olig2')
 # Astro_markers <- c("Aqp4", 'Apoe', 'Slc1a3', 'Cst3', 'Aldh1l1', 'Olig1')
-all_markers2 <- FindAllMarkers(
+all_markers <- FindAllMarkers(
   object = sobj2,
   only.pos = TRUE, # Consider only positive markers
   min.pct = 0.50, #0.25, # Gene must be detected in at least 25% of cells within a cluster
@@ -68,31 +68,29 @@ all_markers2 <- FindAllMarkers(
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
-# head(all_markers2)
-# print(rownames(all_markers2))
+# head(all_markers)
+# print(rownames(all_markers))
 
 # Filter markers based on adjusted P-value < 0.05
-significant_markers2 <- all_markers2[all_markers2$p_val_adj < 0.05, ]
+significant_markers <- all_markers[all_markers$p_val_adj < 0.05, ]
 # head(significant_markers)
 
 # Sort markers within each cluster by adj. p-value & log-fold change
-significant_markers_sorted2 <- significant_markers2 %>%
+significant_markers_sorted <- significant_markers %>%
   arrange(cluster, desc(avg_log2FC))
 
 # Extract the top 8 markers for each cluster
-top_markers_per_cluster2 <- significant_markers_sorted2 %>%
+top_markers_per_cluster <- significant_markers_sorted %>%
   group_by(cluster) %>%
   slice_head(n = 8)
 
 # Optionally, sort them back by cluster for easier analysis
-top_markers_per_cluster2 <- top_markers_per_cluster2 %>%
+top_markers_per_cluster <- top_markers_per_cluster %>%
   ungroup() %>%  # Ensure the data is ungrouped for sorting
   arrange(as.numeric(cluster))
-top_markers_per_cluster2
+top_markers_per_cluster
 
-cluster_marker_lists2 <- split(top_markers_per_cluster2$gene, top_markers_per_cluster2$cluster)
-
-
+cluster_marker_lists <- split(top_markers_per_cluster$gene, top_markers_per_cluster$cluster)
 
 
 
@@ -103,8 +101,10 @@ cluster_marker_lists2 <- split(top_markers_per_cluster2$gene, top_markers_per_cl
 
 
 
-for (cluster in names(cluster_marker_lists2)) {
-  markers2 <- cluster_marker_lists2[[cluster]]
+
+
+for (cluster in names(cluster_marker_lists)) {
+  markers <- cluster_marker_lists[[cluster]]
   if (length(markers) > 0) {
     marker_set_name <- paste("Cluster", cluster, "TopMarkers")
     # Call the plot_marker_set function for the current set of markers

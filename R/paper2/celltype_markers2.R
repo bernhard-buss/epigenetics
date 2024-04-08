@@ -1,7 +1,7 @@
 library(readr)
 
 # positive marker genes used for classification of cell types
-celltype_marker_lists <- list(
+celltype_marker_lists2 <- list(
   ProjectionNeurons = c('Neurod2', 'Neurod6', 'Tubb3', 'Tbr1', 'Cux2', 'Cux1', 'Satb2', 'Bhlhe22', 'Hspb3', 'Lmo4', 'Rorb',
                         'Foxp1', 'Fezf2', 'Pcp4', 'Ldb2', 'Etv1', 'Bcl11b', 'Tle4', 'Syt6', 'Foxp2', 'Zfpm2', 'Crym'), 
   # unterteile?
@@ -29,13 +29,10 @@ names(genes_chromatin) <- new_column_names
 # head(genes_chromatin)
 
 # genes that match between the 2 lists:
-matches <- lapply(celltype_marker_lists, function(celltype_markers) {
-  grepl(celltype_markers, genes_chromatin$gene)
-})
-for (i in seq_along(matches)) {
-  cat('Cell Types:', celltype_marker_lists[i], '\n')
-  cat('Matches:', sum(matches[[i]]), '\n')
-}
-
-
+for(celltype_markers in celltype_marker_lists2) {
+  matches <- grepl(celltype_markers, genes_chromatin$gene)
+              num_matches <- sum(matches)
+              cat('Cell Type Markers', celltype_markers, '\n')
+              cat('Matches', num_matches, '\n')
+              }
 

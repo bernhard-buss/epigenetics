@@ -9,16 +9,20 @@ source('R/paper1/read_paper1_data.R')
 source('R/paper1/celltypes_paper1.R')
 
 # Create Seurat object with min genes = 500
-sobj1 <- setup_seurat(
+sobj1_full <- setup_seurat(
   project='paper1',
   counts=read_paper1_data(),
   metadata=read_paper1_metadata()
 )
 
+# add custom metadata
+sobj1_full <- map_metadata_column(sobj1_full, source = 'orig_ident', target = 'Day', lambda = extract_prefix)
+sobj1_full <- map_metadata_column(sobj1_full, source = 'New_cellType', target = 'Cell_Type', lambda = function(x) return(x))
+
 # Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
-#sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
+#sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
 #sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes)
-sobj1 <- subset(sobj1, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
+sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
 
 sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
 
@@ -28,10 +32,12 @@ DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 origIdentPlot <- DimPlot(sobj1, reduction = "umap", group.by = 'orig_ident')
 origIdentPlot
 
-cellTypePlot <- DimPlot(sobj1, reduction = "umap", group.by = 'New_cellType', label = TRUE, repel = TRUE) + NoLegend()
-cellTypePlot
-ggsave(figure_filename(sobj1@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
+# plot cell types over all days
+UMAPPlot(sobj1, group.by = 'Cell_Type', label=TRUE, repel = TRUE)
+# plot cell types for each day
+UMAPPlot(sobj1, group.by = 'Cell_Type', split.by = 'Day', ncol = 4, pt.size = 1)
 
+ggsave(figure_filename(sobj1@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
 
 # Look at cluster IDs of the first 5 cells
 head(Idents(sobj1), 5)
@@ -41,13 +47,24 @@ for (celltype in names(celltype_marker_lists)) {
   plot_feature_set(sobj1, celltype_marker_lists[[celltype]], celltype)
 }
 
-# add markers_score for all celltypes
+# add _markers_score and _markers_score_norm for all celltypes
 for (celltype in names(celltype_marker_lists)) {
   sobj1 <- add_celltype_markers_score(sobj1, celltype_marker_lists[[celltype]], celltype)
 }
 # plot all celltype markers score in one PNG file
-celltype_markers_score_features = sapply(names(celltype_marker_lists), celltype_markers_score_col_name)
-plot_feature_set(sobj1, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
+celltype_markers_score_norm_features = sapply(names(celltype_marker_lists), celltype_markers_score_norm_col_name)
+plot_feature_set(sobj1, celltype_markers_score_norm_features, 'celltype_markers_scores', ncol = 6)
+
+# determine cell type using highest normalized marker score
+map_scores_to_celltype = function(row) {
+  return(extract_prefix(highest_score_col_name(row)))
+}
+sobj1 <- map_metadata_columns(sobj1, sources = celltype_markers_score_norm_features, target = 'Cell_Type_heuristic', lambda = map_scores_to_celltype)
+# plot cell types heuristic over all days
+celltypes_heuristic <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', label=TRUE, repel = TRUE)
+ggsave(figure_filename(sobj1@project.name, 'celltype_heuristic'), plot=celltypes_heuristic, width = 10, height = 8, dpi = 300)
+# plot cell types heuristic for each day
+UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
 
 # find all markers of cluster 1
 cluster1.markers <- FindMarkers(sobj1, ident.1 = 2)
@@ -110,5 +127,34 @@ DoHeatmap(sobj1, features = top10$gene) + NoLegend()
 celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
-# Heatmap for epigenetic modifiers
+# Heatmaps for epigenetic modifiers
 DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()
+
+DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'New_cellType', size = 3, angle = 90)
+
+DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
+
+# Analyzing scale data 
+scale_data = GetAssayData(sobj1, layer = 'scale.data')
+intersect(rownames(scale_data), epigenetic_modifiers)
+
+counts_data = GetAssayData(sobj1, layer = 'counts')
+counts_data_epigenetic_modifiers = intersect(rownames(counts_data), epigenetic_modifiers)
+dim(counts_data[counts_data_epigenetic_modifiers,])
+sanitized_counts = as.matrix(counts_data[counts_data_epigenetic_modifiers,])
+#sanitized_counts = apply(, function(x) return(ifelse(is.numeric(x), x, 0)))
+rowSums(sanitized_counts)
+count(sanitized_counts)
+non_zero_counts_per_row <- apply(sanitized_counts, 1, function(row) sum(row != 0))
+non_zero_counts_per_row
+
+DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'day') + NoLegend()
+
+sobj1_migrating <- subset(sobj1, subset = New_cellType == 'Migrating neurons')
+
+DoHeatmap(sobj1_migrating, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
+
+sobj1_e11 <- subset(sobj1, subset = orig_ident == 'E11')
+
+DoHeatmap(sobj1_e11, features = epigenetic_modifiers, group.by = 'New_cellType')
+

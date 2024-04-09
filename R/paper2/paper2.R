@@ -1,3 +1,24 @@
+celltype_marker_lists2 <- list(
+  ProjectionNeurons = c('Neurod2', 'Neurod6', 'Tubb3', 'Tbr1', 'Cux2', 'Cux1', 'Satb2', 'Bhlhe22', 'Hspb3', 'Lmo4', 'Rorb',
+                        'Foxp1', 'Fezf2', 'Pcp4', 'Ldb2', 'Etv1', 'Bcl11b', 'Tle4', 'Syt6', 'Foxp2', 'Zfpm2', 'Crym'), 
+  # unterteile?
+  InhibitoryNeurons = c('Gad1', 'Gad2', 'Slc32a1', 'Erbb4', 'Sst', 'Calb2', 'Vip'),
+  OligodendrocytePrecursorCells = c('Fabp7', 'Ccnd1', 'Cspg4', 'Mdk', 'Ednrb', 'Pdgfra'),
+  CommittedOligodendrocytePrecursors = c('Brca1', 'Pak4', 'Mycl', 'Pdcd4', 'Fyn', 'Bmp4', 'Epcam'),
+  NewlyFormedOligodendrocytes = c('Sema4d', 'Mob3b', 'Ddc', 'Cnksr3', 'Prom1', 'Fam107b', 'Tmem2', 'Rras2', 'Plekha1',
+                                  'Kndc1', 'Slc9a3r2', 'Tmem141', 'Man1a', 'Prr5l', 'Aspa', 'Anln', 'Ndrg1'),
+  Astrocytes = c('Aldh1l1', 'Slc1a3', 'Apoe', 'Gfap', 'Aqp4'),
+  Microglia = c('Tmem119', 'Aif1'),
+  Pericytes = c('Pdgfrb')
+)
+
+
+
+
+
+
+
+
 ##################################################################################################
 # Cell-Type Identification:
 
@@ -12,12 +33,14 @@ library(tidyr)
 source('R/paper2/read_paper2_data.R')
 source('R/shared/index.R')
 
-sobj2 <- setup_seurat(
+
+sobj2_full <- setup_seurat(
   project = 'paper2',
   counts = read_paper2_data(),
   metadata = read_paper2_metadata()
 )
 
+sobj2 <- add_celltype_metadata(sobj2_full, day_column="timePoint", celltype_column="CellType", celltype_marker_lists=celltype_marker_lists2)
 # Filter mito %, genes # & nUMI
 sobj2 <- subset(sobj2, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
 
@@ -191,9 +214,7 @@ DoHeatmap(sobj2, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 DoHeatmap(sobj2, features = genes) + NoLegend()
 genes <- as.vector(genes_chromatin$gene)
 
-
-subset_data <- subset(genes_chromatin, gene==500)
-DoHeatmap(object=sobj2, features = as.vector((subset_data)) + NoLegend()
+DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$gene)) + NoLegend()
 
           
 

@@ -18,12 +18,61 @@ sobj2 <- setup_seurat(
   metadata = read_paper2_metadata()
 )
 
-
 # Filter mito %, genes # & nUMI
 sobj2 <- subset(sobj2, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
 
 # Clustering (Normalizing, Scaling, PCA, Neighbours)
 sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
+
+#################################################################################################
+# Barplot of Cell-Type Composition per Time Point:
+
+timepoints <- sobj2@meta.data$timePoint
+cell_types <- sobj2@meta.data$CellType
+topics <- sobj2@meta.data$topics
+
+# Create a data frame with relevant information
+df <- data.frame(Timepoint = timepoints, Cell_Type = cell_types, Topic = topics)
+
+# Optionally, you might want to summarize your data to get counts of cells per combination of timepoint, cell type, and topic
+# For example, using dplyr:
+library(dplyr)
+df_summary <- df %>%
+  group_by(Timepoint, Cell_Type, Topic) %>%
+  summarise(Count = n())
+
+# Create the bar plot
+ggplot(df_summary, aes(x = Timepoint, y = Count, fill = Cell_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~Topic) +
+  labs(title = "Bar Plot of Cell Types Across Timepoints",
+       x = "Timepoint",
+       y = "Count",
+       fill = "Cell Type") +
+  theme_minimal()
+
+
+
+
+
+
+CT_TP_plot <- DimPlot(sobj2, reduction="umap", group.by = "CellType", split.by="timePoint", label=T, repel=TRUE) + NoLegend() 
+
+umap_coords <- CT_TP_plot$sobj2
+
+ggplot(umap_coords, aes(x='CellType', y='timePoint', fill='CellType')) +
+  geom_bar(stat='identity') +
+  labs(title='Cell-Types at Different Time Points',
+       x='Cell Types',
+       y= 'time Points') +
+  theme_minimal()
+
+ggplot(umap_coords, aes(x = "timePoint", y = "CellType")) +
+  geom_bin2d() +
+  labs(title = "Cell-Types at Different Time Points",
+       x = "timePoint",
+       y = "CellType") +
+  theme_minimal()
 
 ##################################################################################################
 # Feature Map:
@@ -124,26 +173,7 @@ DoHeatmap(sobj2, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 # Heatmap for epigenetic modifiers
 DoHeatmap(sobj2, features = epigenetic_modifiers) + NoLegend()
 
-#################################################################################################
-# Barplot of Cell-Type Composition per Time Point:
 
-CT_TP_plot <- DimPlot(sobj2, reduction="umap", group.by = "CellType", split.by="timePoint", label=T, repel=TRUE) + NoLegend() 
-
-umap_coords <- CT_TP_plot$data
-
-ggplot(umap_coords, aes(x='CellType', y='timePoint', fill='CellType')) +
-  geom_bar(stat='identity') +
-  labs(title='Cell-Types at Different Time Points',
-       x='Cell Types',
-       y= 'time Points') +
-  theme_minimal()
-
-ggplot(umap_coords, aes(x = 'timePoint', y = 'CellType')) +
-  geom_bin2d() +
-  labs(title = "UMAP Clusters",
-       x = "timePoint",
-       y = "CellType") +
-  theme_minimal()
 
 
 

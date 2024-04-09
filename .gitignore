@@ -1,5 +1,4 @@
-# ignore generated outputs
-output/*
+# ignore large data
 data/*
 tmp/*
 

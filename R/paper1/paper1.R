@@ -1,5 +1,4 @@
 #install.packages('Seurat')
-
 library('Seurat')
 library('ggplot2')
 library(dplyr)
@@ -22,14 +21,16 @@ sobj1_full <- setup_seurat(
 sobj1_full <- map_metadata_column(sobj1_full, source = 'orig_ident', target = 'Day', lambda = extract_prefix)
 sobj1_full <- map_metadata_column(sobj1_full, source = 'New_cellType', target = 'Cell_Type', lambda = function(x) return(x))
 
-# Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
+# Filter mito < 7.5 % && genes > 500 (& Cell_Type in celltypes)
 #sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
-#sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes)
-sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
+#sobj <- subset(sobj, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Cell_Type %in% celltypes)
+#sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Cell_Type %in% celltypes_paper1 & Phase == 'G1')
+days = c("E16", "E17", "E18", "P1", "P4")
+#unique(FetchData(sobj1, 'Day')$Day)
+sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Day %in% days)
 
 sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
 sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_lists)
-
 
 
 # ANALYSIS
@@ -38,18 +39,16 @@ sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_list
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 
-origIdentPlot <- DimPlot(sobj1, reduction = "umap", group.by = 'orig_ident')
+origIdentPlot <- DimPlot(sobj1, reduction = "umap", group.by = 'Day')
 origIdentPlot
 
 # plot cell types over all days
 UMAPPlot(sobj1, group.by = 'Cell_Type', label=TRUE, repel = TRUE)
 # plot cell types for each day
-UMAPPlot(sobj1, group.by = 'Cell_Type', split.by = 'Day', ncol = 4, pt.size = 1)
+UMAPPlot(sobj1, group.by = 'Cell_Type', split.by = 'Day', ncol = 3, pt.size = 0.5)
 
 ggsave(figure_filename(sobj1@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
 
-# Look at cluster IDs of the first 5 cells
-head(Idents(sobj1), 5)
 
 # Loop over the list, create a FeaturePlot for each set of markers, and save as PNG
 for (celltype in names(celltype_marker_lists)) {
@@ -57,11 +56,11 @@ for (celltype in names(celltype_marker_lists)) {
 }
 
 # plot all celltype markers score in one PNG file
-celltype_markers_score_norm_features = sapply(names(celltype_marker_lists), celltype_markers_score_norm_col_name)
-plot_feature_set(sobj1, celltype_markers_score_norm_features, 'celltype_markers_scores', ncol = 6)
+plot_feature_set(sobj1, celltype_markers_score_norm_features(celltype_marker_lists), 'celltype_markers_scores', ncol = 6)
 
 # plot cell types heuristic over all days
 celltypes_heuristic <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', label=TRUE, repel = TRUE)
+celltypes_heuristic
 ggsave(figure_filename(sobj1@project.name, 'celltype_heuristic'), plot=celltypes_heuristic, width = 10, height = 8, dpi = 300)
 # plot cell types heuristic for each day
 UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
@@ -127,25 +126,32 @@ DoHeatmap(sobj1, features = top10$gene) + NoLegend()
 celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
+
 # Heatmaps for epigenetic modifiers
-chromatin_markers = FindAllMarkers(
-  object = sobj1,
-  features = as.vector(genes_chromatin$gene),
+relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))
+sobj1_celltype <- subset(sobj1, subset = Cell_Type_heuristic == 'astrocytes')
+Idents(sobj1_celltype) <- 'Day'
+filtered_chromatin_markers_all = FindAllMarkers(
+  object = sobj1_celltype,
+  features = relevant_chromatin_genes,
   #only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.50, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+  min.pct = 0.25, # Gene must be detected in at least 25% of cells within a cluster
   #min.diff.pct = 0.5,
-  logfc.threshold = 0.7, #0.25, # Minimum log-fold change
+  logfc.threshold = 0.25, # Minimum log-fold change
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
 
-filtered_chromatin_markers = FindMarkers(
-  object = sobj1_full,
-  features = as.vector(genes_chromatin$gene),
-  ident.1=,
-  group.by=
+dim(filtered_chromatin_markers_all)
+filtered_chromatin_markers_all_ordered <- filtered_chromatin_markers_all[order(filtered_chromatin_markers_all$cluster),]
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj1,
+  features = relevant_chromatin_genes,
+  ident.1='Astrocytes',
+  group.by='New_cellType',
+  logfc.threshold = 1
 )
-
+rownames(chromatin_markers_astrocytes)
 
 DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()
 
@@ -154,10 +160,15 @@ DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'New_cellType', siz
 DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
 
 
-DoHeatmap(sobj1, features = as.vector(genes_chromatin$gene), group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
+DoHeatmap(sobj1, features = filtered_chromatin_markers_all$gene, group.by = 'New_cellType', size = 3, angle = 90)
+DoHeatmap(sobj1, features = rownames(chromatin_markers_astrocytes), group.by = 'New_cellType', size = 3, angle = 90)
+
 
 DoHeatmap(sobj1, features = as.vector(genes_chromatin$gene), group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
 
+# Heatmap for Astrocytes only, E17-P4
+map = DoHeatmap(sobj1, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
+map
 
 # Analyzing scale data 
 scale_data = GetAssayData(sobj1, layer = 'scale.data')

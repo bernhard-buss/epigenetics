@@ -11,6 +11,10 @@ setup_seurat <- function(project, counts, metadata) {
   return(sobj)
 }
 
+celltype_markers_score_norm_features <- function(celltype_marker_lists) {
+  return(sapply(names(celltype_marker_lists), celltype_markers_score_norm_col_name))
+}
+
 add_celltype_metadata <- function(sobj, celltype_marker_lists) {
   # add _markers_score and _markers_score_norm for all celltypes
   for (celltype in names(celltype_marker_lists)) {
@@ -21,7 +25,7 @@ add_celltype_metadata <- function(sobj, celltype_marker_lists) {
   map_scores_to_celltype = function(row) {
     return(extract_prefix(highest_score_col_name(row)))
   }
-  sobj <- map_metadata_columns(sobj, sources = celltype_markers_score_norm_features, target = 'Cell_Type_heuristic', lambda = map_scores_to_celltype)
+  sobj <- map_metadata_columns(sobj, sources = celltype_markers_score_norm_features(), target = 'Cell_Type_heuristic', lambda = map_scores_to_celltype)
   
   return(sobj)
 }

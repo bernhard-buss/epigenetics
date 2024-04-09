@@ -60,28 +60,55 @@ sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 days <- c("P1", "P7", "P21")
 
 
+# Markers
+
 # What markers are shared between 'my list' & 'Rodrigos list'
 relevant_markers <- intersect(Features(sobj2), as.vector(genes_chromatin$gene))
 relevant_markers
 
-# Find the markers
+# Clustered by days across timepoints 
+sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
 all_markers <- FindAllMarkers(
-  object = sobj2,
+  object = sobj2_by_days,
   features = relevant_markers,
-  #only.pos = TRUE, # Consider only positive markers
+  only.pos = TRUE, # Consider only positive markers
   min.pct = 0.5, #0.25, # Gene must be detected in at least 25% of cells within a cluster
   #min.diff.pct = 0.5,
-  logfc.threshold = 0.7, #0.25, # Minimum log-fold change
+  logfc.threshold = 0.5, #0.25, # Minimum log-fold change
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
+all_markers
 
-#Astrocytes_Markers <- FindMarkers(
-#  object = sobj2_full,
-#  features = as.vector(genes_chromatin$gene),
+# Order by clusters
+# order(all_markers,increasing=cluster) goht nööd?!?!
+
+#Astrocytes_Markers = FindMarkers(
+#  object = sobj2,
+#  features = relevant_markers,
 #  ident.1 = 'Astro',
-#  group.by = 'Day'
+#  group.by = 'Day',
+#. logfc.threshold=1
 #)
+
+
+# Heatmaps
+
+DoHeatmap(object=sobj2_by_days, features = relevant_markers) + NoLegend()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # add markers_score for all celltypes
 for (celltype in names(matches)) {

@@ -79,6 +79,17 @@ df_summary <- df %>%
   group_by(Timepoint, Cell_Type, Topic) %>%
   summarise(Count = n())
 
+
+
+
+UMAPPlot(sobj2, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
+
+
+
+
+
+
+
 # Create the bar plot
 ggplot(df_summary, aes(x = Timepoint, y = Count, fill = Cell_Type)) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -158,6 +169,16 @@ all_markers <- FindAllMarkers(
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
+
+FindMarkers(
+  object = sobj2,
+  features = as.vector(genes_chromatin$gene),
+  ident.1 = 'CellType',
+  group.by = 'timePoint'
+)
+
+
+
 # head(all_markers)
 # print(rownames(all_markers))
 
@@ -207,8 +228,8 @@ all_markers %>%
   ungroup() -> top10
 top10$gene
 DoHeatmap(sobj2, features = top10$gene) + NoLegend()
-celltype_marker_lists['cpnLayer23']
-DoHeatmap(sobj2, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
+celltype_marker_lists2['ProjectionNeurons']
+DoHeatmap(sobj2, features = celltype_marker_lists['ProjectionNeurons']) + NoLegend()
 
 # Heatmap for epigenetic modifiers
 DoHeatmap(sobj2, features = genes) + NoLegend()

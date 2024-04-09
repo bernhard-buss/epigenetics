@@ -1,3 +1,24 @@
+# Preliminaries:
+
+library(readr)
+library(dplyr) 
+library(ggplot2)
+library(Seurat)
+library(patchwork)
+library(Matrix)
+library(tidyr)
+
+# genes list by Rodrigo
+genes_chromatin <- read.csv("input/genes_chromatin_mm39.csv")
+
+# Delete 2nd column & change header
+print(names(genes_chromatin))
+genes_chromatin <- genes_chromatin[, !names(genes_chromatin) %in% c('X')]
+new_column_names <- c('gene', 'ID', 'whole_gene_name', 'function')
+names(genes_chromatin) <- new_column_names
+View(genes_chromatin)
+
+# Cell-Type Markers - list based off of paper
 celltype_marker_lists2 <- list(
   ProjectionNeurons = c('Neurod2', 'Neurod6', 'Tubb3', 'Tbr1', 'Cux2', 'Cux1', 'Satb2', 'Bhlhe22', 'Hspb3', 'Lmo4', 'Rorb',
                         'Foxp1', 'Fezf2', 'Pcp4', 'Ldb2', 'Etv1', 'Bcl11b', 'Tle4', 'Syt6', 'Foxp2', 'Zfpm2', 'Crym'), 
@@ -12,6 +33,64 @@ celltype_marker_lists2 <- list(
   Pericytes = c('Pdgfrb')
 )
 
+source('R/paper2/read_paper2_data.R')
+source('R/shared/index.R')
+
+
+# Seurat
+
+sobj2_full <- setup_seurat(
+  project = 'paper2',
+  counts = read_paper2_data(),
+  metadata = read_paper2_metadata()
+)
+
+# add custom metadata
+sobj2_full <- map_metadata_column(sobj2_full, source = 'timePoint', target = 'Day', lambda = extract_prefix)
+sobj2_full <- map_metadata_column(sobj2_full, source = 'CellType', target = 'Cell_Type', lambda = function(x) return(x))
+
+# Filter mito %, genes # & nUMI
+sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
+
+# Clustering (Normalizing, Scaling, PCA, Neighbours)
+sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
+
+# UMAPPlot(sobj2_full, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
+
+days <- c("P1", "P7", "P21")
+
+
+# What markers are shared between 'my list' & 'Rodrigos list'
+relevant_markers <- intersect(Features(sobj2), as.vector(genes_chromatin$gene))
+relevant_markers
+
+# Find the markers
+all_markers <- FindAllMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  #only.pos = TRUE, # Consider only positive markers
+  min.pct = 0.5, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+  #min.diff.pct = 0.5,
+  logfc.threshold = 0.7, #0.25, # Minimum log-fold change
+  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
+  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
+)
+
+#Astrocytes_Markers <- FindMarkers(
+#  object = sobj2_full,
+#  features = as.vector(genes_chromatin$gene),
+#  ident.1 = 'Astro',
+#  group.by = 'Day'
+#)
+
+# add markers_score for all celltypes
+for (celltype in names(matches)) {
+  sobj2 <- add_celltype_markers_score(sobj2, matches[[celltype]], celltype)
+}
+
+# plot all celltype markers score in one PNG file
+celltype_markers_score_features = sapply(names(celltype_marker_lists2), celltype_markers_score_col_name)
+plot_feature_set(sobj2, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
 
 
 
@@ -21,43 +100,6 @@ celltype_marker_lists2 <- list(
 
 ##################################################################################################
 # Cell-Type Identification:
-
-library(readr)
-library(dplyr) 
-library(ggplot2)
-library(Seurat)
-library(patchwork)
-library(Matrix)
-library(tidyr)
-
-source('R/paper2/read_paper2_data.R')
-source('R/shared/index.R')
-
-
-sobj2_full <- setup_seurat(
-  project = 'paper2',
-  counts = read_paper2_data(),
-  metadata = read_paper2_metadata()
-)
-
-sobj2 <- add_celltype_metadata(sobj2_full, day_column="timePoint", celltype_column="CellType", celltype_marker_lists=celltype_marker_lists2)
-# Filter mito %, genes # & nUMI
-sobj2 <- subset(sobj2, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
-
-# Clustering (Normalizing, Scaling, PCA, Neighbours)
-sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
-
-
-# genes list by Rodrigo
-genes_chromatin <- read.csv("input/genes_chromatin_mm39.csv")
-
-# Delete 2nd column & change header
-print(names(genes_chromatin))
-genes_chromatin <- genes_chromatin[, !names(genes_chromatin) %in% c('X')]
-new_column_names <- c('gene', 'ID', 'whole_gene_name', 'function')
-names(genes_chromatin) <- new_column_names
-View(genes_chromatin)
-
 
 #################################################################################################
 # Barplot of Cell-Type Composition per Time Point:
@@ -78,14 +120,6 @@ library(dplyr)
 df_summary <- df %>%
   group_by(Timepoint, Cell_Type, Topic) %>%
   summarise(Count = n())
-
-
-
-
-UMAPPlot(sobj2, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
-
-
-
 
 
 
@@ -147,35 +181,12 @@ for (celltype_markers in names(matches)) {
   plot_feature_set(sobj2, matches[[celltype_markers]], celltype_markers)
 }
 
-# add markers_score for all celltypes
-for (celltype in names(matches)) {
-  sobj2 <- add_celltype_markers_score(sobj2, matches[[celltype]], celltype)
-}
-
-# plot all celltype markers score in one PNG file
-celltype_markers_score_features = sapply(names(celltype_marker_lists2), celltype_markers_score_col_name)
-plot_feature_set(sobj2, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
-
 # find all markers of cluster 1
 # cluster1.markers <- FindMarkers(sobj2, ident.1 = 2)
 # head(cluster1.markers, n = 5)
 
-all_markers <- FindAllMarkers(
-  object = sobj2,
-  only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.50, #0.25, # Gene must be detected in at least 25% of cells within a cluster
-  #min.diff.pct = 0.5,
-  logfc.threshold = 0.7, #0.25, # Minimum log-fold change
-  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
-  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
-)
 
-FindMarkers(
-  object = sobj2,
-  features = as.vector(genes_chromatin$gene),
-  ident.1 = 'CellType',
-  group.by = 'timePoint'
-)
+
 
 
 
@@ -266,6 +277,6 @@ DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$gene)) + NoLegend()
 #sobj2 <- add_celltype_markers_score(sobj2, CPN_markers, "CPN")
 
 # Heatmaps
-DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$genes)) + NoLegend()
+#DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$genes)) + NoLegend()
 
 # Marker gene expression by cell

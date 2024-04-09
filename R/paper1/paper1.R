@@ -45,9 +45,9 @@ origIdentPlot
 # plot cell types over all days
 UMAPPlot(sobj1, group.by = 'Cell_Type', label=TRUE, repel = TRUE)
 # plot cell types for each day
-UMAPPlot(sobj1, group.by = 'Cell_Type', split.by = 'Day', ncol = 3, pt.size = 0.5)
-
-ggsave(figure_filename(sobj1@project.name, 'New_cellType_plot'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
+cellTypePlot = UMAPPlot(sobj1, group.by = 'Cell_Type', split.by = 'Day', ncol = 3, pt.size = 0.5)
+cellTypePlot
+ggsave(figure_filename(sobj1@project.name, 'Cell_Type_per_day'), plot = cellTypePlot, width = 10, height = 8, dpi = 300)
 
 
 # Loop over the list, create a FeaturePlot for each set of markers, and save as PNG
@@ -59,17 +59,14 @@ for (celltype in names(celltype_marker_lists)) {
 plot_feature_set(sobj1, celltype_markers_score_norm_features(celltype_marker_lists), 'celltype_markers_scores', ncol = 6)
 
 # plot cell types heuristic over all days
-celltypes_heuristic <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', label=TRUE, repel = TRUE)
-celltypes_heuristic
-ggsave(figure_filename(sobj1@project.name, 'celltype_heuristic'), plot=celltypes_heuristic, width = 10, height = 8, dpi = 300)
+celltypeHeuristicCombinedPlot <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', label=TRUE, repel = TRUE)
+ggsave(figure_filename(sobj1@project.name, 'Cell_Type_heuristic_combined'), plot=celltypeHeuristicCombinedPlot, width = 10, height = 8, dpi = 300)
 # plot cell types heuristic for each day
-UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
+celltypeHeuristicPlot <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 3, pt.size = 0.5)
+ggsave(figure_filename(sobj1@project.name, 'Cell_Type_heuristic_per_day'), plot = celltypeHeuristicPlot, width = 10, height = 8, dpi = 300)
 
-# find all markers of cluster 1
-cluster1.markers <- FindMarkers(sobj1, ident.1 = 2)
-head(cluster1.markers, n = 5)
 
-# Find all markers
+# ANALYSIS: Find all markers and plot top markers for each cluster
 all_markers <- FindAllMarkers(
   object = sobj1,
   only.pos = TRUE, # Consider only positive markers
@@ -80,11 +77,8 @@ all_markers <- FindAllMarkers(
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
 
-head(all_markers)
-
 # Filter markers based on adjusted P-value < 0.05
 significant_markers <- all_markers[all_markers$p_val_adj < 0.05, ]
-head(significant_markers)
 
 # Sort the markers within each cluster by adjusted p-value and log-fold change
 significant_markers_sorted <- significant_markers %>%
@@ -98,7 +92,6 @@ top_markers_per_cluster <- significant_markers_sorted %>%
 top_markers_per_cluster <- top_markers_per_cluster %>%
   ungroup() %>%  # Ensure the data is ungrouped for sorting
   arrange(as.numeric(cluster))
-top_markers_per_cluster
 
 cluster_marker_lists <- split(top_markers_per_cluster$gene, top_markers_per_cluster$cluster)
 
@@ -111,7 +104,9 @@ for (cluster in names(cluster_marker_lists)) {
   }
 }
 
-# gather celltype assignment lists
+
+
+# INTERPRETATION: gather celltype assignment lists
 celltype_assignments = assign_cell_types(cluster_marker_lists, celltype_marker_lists)
 celltype_assignments
 print(celltype_assignments)
@@ -127,20 +122,13 @@ celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 
+
+# ANALYSIS: DGE for epigenetic modifiers/chromatin genes
 # Heatmaps for epigenetic modifiers
 relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))
-sobj1_celltype <- subset(sobj1, subset = Cell_Type_heuristic == 'astrocytes')
-Idents(sobj1_celltype) <- 'Day'
-filtered_chromatin_markers_all = FindAllMarkers(
-  object = sobj1_celltype,
-  features = relevant_chromatin_genes,
-  #only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.25, # Gene must be detected in at least 25% of cells within a cluster
-  #min.diff.pct = 0.5,
-  logfc.threshold = 0.25, # Minimum log-fold change
-  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
-  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
-)
+for (celltype in unique(sobj1@meta.data$Cell_Type)) {
+  plot_DGE_heatmap(sobj1, celltype, relevant_chromatin_genes)
+}
 
 dim(filtered_chromatin_markers_all)
 filtered_chromatin_markers_all_ordered <- filtered_chromatin_markers_all[order(filtered_chromatin_markers_all$cluster),]
@@ -166,9 +154,7 @@ DoHeatmap(sobj1, features = rownames(chromatin_markers_astrocytes), group.by = '
 
 DoHeatmap(sobj1, features = as.vector(genes_chromatin$gene), group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
 
-# Heatmap for Astrocytes only, E17-P4
-map = DoHeatmap(sobj1, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
-map
+
 
 # Analyzing scale data 
 scale_data = GetAssayData(sobj1, layer = 'scale.data')

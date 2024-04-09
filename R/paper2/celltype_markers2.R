@@ -7,7 +7,7 @@ celltype_marker_lists2 <- list(
   # unterteile?
   InhibitoryNeurons = c('Gad1', 'Gad2', 'Slc32a1', 'Erbb4', 'Sst', 'Calb2', 'Vip'),
   OligodendrocytePrecursorCells = c('Fabp7', 'Ccnd1', 'Cspg4', 'Mdk', 'Ednrb', 'Pdgfra'),
-  CommittedOligodendrocytePrecursors = c('Brca1', 'Pak4', 'Mycl', 'Pdcd4', 'Fyn', 'Bmp4', 'Epcam', ),
+  CommittedOligodendrocytePrecursors = c('Brca1', 'Pak4', 'Mycl', 'Pdcd4', 'Fyn', 'Bmp4', 'Epcam'),
   NewlyFormedOligodendrocytes = c('Sema4d', 'Mob3b', 'Ddc', 'Cnksr3', 'Prom1', 'Fam107b', 'Tmem2', 'Rras2', 'Plekha1',
                                   'Kndc1', 'Slc9a3r2', 'Tmem141', 'Man1a', 'Prr5l', 'Aspa', 'Anln', 'Ndrg1'),
   Astrocytes = c('Aldh1l1', 'Slc1a3', 'Apoe', 'Gfap', 'Aqp4'),
@@ -23,6 +23,7 @@ print(names(genes_chromatin))
 genes_chromatin <- genes_chromatin[, !names(genes_chromatin) %in% c('X')]
 new_column_names <- c('gene', 'ID', 'whole_gene_name', 'function')
 names(genes_chromatin) <- new_column_names
+View(genes_chromatin)
 # check
 # print(names(genes_chromatin))
 # View(genes_chromatin)
@@ -34,5 +35,7 @@ for(celltype_markers in celltype_marker_lists2) {
               num_matches <- sum(matches)
               cat('Cell Type Markers', celltype_markers, '\n')
               cat('Matches', num_matches, '\n')
-              }
+}
+
+?grepl
 

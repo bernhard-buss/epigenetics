@@ -35,7 +35,7 @@ celltype_marker_lists2 <- list(
 
 source('R/paper2/read_paper2_data.R')
 source('R/shared/index.R')
-
+source('R/paper2/celltypes_paper2.R')
 
 # Seurat
 
@@ -49,39 +49,79 @@ sobj2_full <- setup_seurat(
 sobj2_full <- map_metadata_column(sobj2_full, source = 'timePoint', target = 'Day', lambda = extract_prefix)
 sobj2_full <- map_metadata_column(sobj2_full, source = 'CellType', target = 'Cell_Type', lambda = function(x) return(x))
 
+days <- c("P1", "P7", "P21")
+
 # Filter mito %, genes # & nUMI
-sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000)
+sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
 
 # Clustering (Normalizing, Scaling, PCA, Neighbours)
 sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 
 # UMAPPlot(sobj2_full, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
-
-days <- c("P1", "P7", "P21")
-
+#sobj2 <- add_celltype_metadata(sobj2, celltype_marker_lists=celltype_marker_lists2)
 
 # Markers
 
 # What markers are shared between 'my list' & 'Rodrigos list'
-relevant_markers <- intersect(Features(sobj2), as.vector(genes_chromatin$gene))
-relevant_markers
+relevant_markers <- intersect(as.vector(genes_chromatin$gene), Features(sobj2))
 
-# Clustered by days across timepoints 
-sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
-all_markers <- FindAllMarkers(
-  object = sobj2_by_days,
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
+Idents(sobj2_celltype) <- 'Day'
+filtered_chromatin_markers_all = FindAllMarkers(
+  object = sobj2_celltype,
   features = relevant_markers,
-  only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.5, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+  #only.pos = TRUE, # Consider only positive markers
+  min.pct = 0.5, # Gene must be detected in at least 25% of cells within a cluster
   #min.diff.pct = 0.5,
-  logfc.threshold = 0.5, #0.25, # Minimum log-fold change
+  logfc.threshold = 0.7, # Minimum log-fold change
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
-all_markers
 
-# Order by clusters
-# order(all_markers,increasing=cluster) goht nööd?!?!
+# Clustered by days across timepoints 
+sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
+all_markers_days <- FindAllMarkers(
+  object = sobj2_by_days,
+  features = relevant_markers,
+  only.pos = TRUE, # Consider only positive markers
+  min.pct = 0.25, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+  #min.diff.pct = 0.5,
+  logfc.threshold = 0.25, #0.25, # Minimum log-fold change
+  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
+  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
+)
+
+dim(filtered_chromatin_markers_all)
+filtered_chromatin_markers_all_ordered <- filtered_chromatin_markers_all[order(filtered_chromatin_markers_all$cluster),]
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='Astro',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+rownames(chromatin_markers_astrocytes)
+
+DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Astrocytes_Markers = FindMarkers(
 #  object = sobj2,
@@ -95,20 +135,6 @@ all_markers
 # Heatmaps
 
 DoHeatmap(object=sobj2_by_days, features = relevant_markers) + NoLegend()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # add markers_score for all celltypes
 for (celltype in names(matches)) {

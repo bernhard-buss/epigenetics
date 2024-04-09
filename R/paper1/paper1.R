@@ -16,8 +16,7 @@ sobj1_full <- setup_seurat(
 )
 
 # add custom metadata
-sobj1_full <- map_metadata_column(sobj1_full, source = 'orig_ident', target = 'Day', lambda = extract_prefix)
-sobj1_full <- map_metadata_column(sobj1_full, source = 'New_cellType', target = 'Cell_Type', lambda = function(x) return(x))
+sobj1_full <- add_celltype_metadata(sobj1_full, day_column='Day', celltype_column='New_cellType', celltype_marker_lists=celltype_marker_lists)
 
 # Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
 #sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
@@ -47,19 +46,10 @@ for (celltype in names(celltype_marker_lists)) {
   plot_feature_set(sobj1, celltype_marker_lists[[celltype]], celltype)
 }
 
-# add _markers_score and _markers_score_norm for all celltypes
-for (celltype in names(celltype_marker_lists)) {
-  sobj1 <- add_celltype_markers_score(sobj1, celltype_marker_lists[[celltype]], celltype)
-}
 # plot all celltype markers score in one PNG file
 celltype_markers_score_norm_features = sapply(names(celltype_marker_lists), celltype_markers_score_norm_col_name)
 plot_feature_set(sobj1, celltype_markers_score_norm_features, 'celltype_markers_scores', ncol = 6)
 
-# determine cell type using highest normalized marker score
-map_scores_to_celltype = function(row) {
-  return(extract_prefix(highest_score_col_name(row)))
-}
-sobj1 <- map_metadata_columns(sobj1, sources = celltype_markers_score_norm_features, target = 'Cell_Type_heuristic', lambda = map_scores_to_celltype)
 # plot cell types heuristic over all days
 celltypes_heuristic <- UMAPPlot(sobj1, group.by = 'Cell_Type_heuristic', label=TRUE, repel = TRUE)
 ggsave(figure_filename(sobj1@project.name, 'celltype_heuristic'), plot=celltypes_heuristic, width = 10, height = 8, dpi = 300)
@@ -133,6 +123,12 @@ DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()
 DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'New_cellType', size = 3, angle = 90)
 
 DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
+
+
+DoHeatmap(sobj1, features = as.vector(genes_chromatin$gene), group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
+
+DoHeatmap(sobj1, features = as.vector(genes_chromatin$gene), group.by = 'Cell_Type_heuristic', size = 3, angle = 90)
+
 
 # Analyzing scale data 
 scale_data = GetAssayData(sobj1, layer = 'scale.data')

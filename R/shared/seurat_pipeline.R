@@ -1,10 +1,30 @@
 library(Seurat)
 
+source('R/shared/add_celltype_markers_score.R')
+
 # Create SeuratObject and setup with metadata.
 setup_seurat <- function(project, counts, metadata) {
   #Setup the Seurat Object & filtering: (min genes = 500, mito<5%)
   sobj <- CreateSeuratObject(counts=counts, project=project)
   sobj <- AddMetaData(sobj, metadata=metadata)
+  
+  return(sobj)
+}
+
+add_celltype_metadata <- function(sobj, day_column='orig_ident', celltype_column='New_cellType', celltype_marker_lists) {
+  sobj <- map_metadata_column(sobj1_full, source = day_column, target = 'Day', lambda = extract_prefix)
+  sobj <- map_metadata_column(sobj1_full, source = celltype_column, target = 'Cell_Type', lambda = function(x) return(x))
+  
+  # add _markers_score and _markers_score_norm for all celltypes
+  for (celltype in names(celltype_marker_lists)) {
+    sobj <- add_celltype_markers_score(sobj, celltype_marker_lists[[celltype]], celltype)
+  }
+  
+  # determine cell type using highest normalized marker score
+  map_scores_to_celltype = function(row) {
+    return(extract_prefix(highest_score_col_name(row)))
+  }
+  sobj <- map_metadata_columns(sobj, sources = celltype_markers_score_norm_features, target = 'Cell_Type_heuristic', lambda = map_scores_to_celltype)
   
   return(sobj)
 }

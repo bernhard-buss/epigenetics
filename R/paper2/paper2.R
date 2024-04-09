@@ -24,15 +24,30 @@ sobj2 <- subset(sobj2, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000
 # Clustering (Normalizing, Scaling, PCA, Neighbours)
 sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 
+
+# genes list by Rodrigo
+genes_chromatin <- read.csv("input/genes_chromatin_mm39.csv")
+
+# Delete 2nd column & change header
+print(names(genes_chromatin))
+genes_chromatin <- genes_chromatin[, !names(genes_chromatin) %in% c('X')]
+new_column_names <- c('gene', 'ID', 'whole_gene_name', 'function')
+names(genes_chromatin) <- new_column_names
+View(genes_chromatin)
+
+
 #################################################################################################
 # Barplot of Cell-Type Composition per Time Point:
+head(sobj2)
 
-timepoints <- sobj2@meta.data$timePoint
-cell_types <- sobj2@meta.data$CellType
+
+
+timePoint <- sobj2@meta.data$timePoint
+CellType <- sobj2@meta.data$CellType
 topics <- sobj2@meta.data$topics
 
 # Create a data frame with relevant information
-df <- data.frame(Timepoint = timepoints, Cell_Type = cell_types, Topic = topics)
+df <- data.frame(Timepoint = timePoint, Cell_Type = CellType, Topic = topics)
 
 # Optionally, you might want to summarize your data to get counts of cells per combination of timepoint, cell type, and topic
 # For example, using dplyr:
@@ -66,6 +81,8 @@ ggplot(umap_coords, aes(x='CellType', y='timePoint', fill='CellType')) +
        x='Cell Types',
        y= 'time Points') +
   theme_minimal()
+
+
 
 ggplot(umap_coords, aes(x = "timePoint", y = "CellType")) +
   geom_bin2d() +
@@ -146,8 +163,8 @@ cluster_marker_lists <- split(top_markers_per_cluster$gene, top_markers_per_clus
 ##################################################################################################
 # Heat Maps:
 
-for (cluster in names(cluster_marker_lists2)) {
-  markers <- cluster_marker_lists2[[cluster]]
+for (cluster in names(genes_chromatin)) {
+  markers <- cluster_marker_lists[[cluster]]
   if (length(markers) > 0) {
     marker_set_name <- paste("Cluster", cluster, "TopMarkers")
     # Call the plot_marker_set function for the current set of markers
@@ -171,9 +188,23 @@ celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj2, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 # Heatmap for epigenetic modifiers
-DoHeatmap(sobj2, features = epigenetic_modifiers) + NoLegend()
+DoHeatmap(sobj2, features = genes) + NoLegend()
+genes <- as.vector(genes_chromatin$gene)
 
 
+subset_data <- subset(genes_chromatin, gene==500)
+DoHeatmap(object=sobj2, features = as.vector((subset_data)) + NoLegend()
+
+          
+
+##################################################################################################
+# Differential Expression: Of Astrocytes against most abundant 
+
+# same TPs differ. CTs
+
+# Plot heatmap, sufficient # of genes, visually clear
+
+# 1 c. type over differ. days
 
 
 
@@ -193,6 +224,6 @@ DoHeatmap(sobj2, features = epigenetic_modifiers) + NoLegend()
 #sobj2 <- add_celltype_markers_score(sobj2, CPN_markers, "CPN")
 
 # Heatmaps
-#DoHeatmap(object=sobj2, features = CPN_markers) + NoLegend()
+DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$genes)) + NoLegend()
 
 # Marker gene expression by cell

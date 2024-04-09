@@ -8,6 +8,9 @@ source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
 source('R/paper1/celltypes_paper1.R')
 
+
+# SEURAT PIPELINE
+
 # Create Seurat object with min genes = 500
 sobj1_full <- setup_seurat(
   project='paper1',
@@ -16,7 +19,8 @@ sobj1_full <- setup_seurat(
 )
 
 # add custom metadata
-sobj1_full <- add_celltype_metadata(sobj1_full, day_column='Day', celltype_column='New_cellType', celltype_marker_lists=celltype_marker_lists)
+sobj1_full <- map_metadata_column(sobj1_full, source = 'orig_ident', target = 'Day', lambda = extract_prefix)
+sobj1_full <- map_metadata_column(sobj1_full, source = 'New_cellType', target = 'Cell_Type', lambda = function(x) return(x))
 
 # Filter mito < 7.5 % && genes > 500 (& New_cellType in celltypes)
 #sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500) # includes DL (deleterious) and low quality
@@ -24,6 +28,12 @@ sobj1_full <- add_celltype_metadata(sobj1_full, day_column='Day', celltype_colum
 sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & New_cellType %in% celltypes & Phase == 'G1')
 
 sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
+sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_lists)
+
+
+
+# ANALYSIS
+# Plotting & Analysis
 
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
@@ -118,6 +128,25 @@ celltype_marker_lists['cpnLayer23']
 DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 # Heatmaps for epigenetic modifiers
+chromatin_markers = FindAllMarkers(
+  object = sobj1,
+  features = as.vector(genes_chromatin$gene),
+  #only.pos = TRUE, # Consider only positive markers
+  min.pct = 0.50, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+  #min.diff.pct = 0.5,
+  logfc.threshold = 0.7, #0.25, # Minimum log-fold change
+  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
+  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
+)
+
+filtered_chromatin_markers = FindMarkers(
+  object = sobj1_full,
+  features = as.vector(genes_chromatin$gene),
+  ident.1=,
+  group.by=
+)
+
+
 DoHeatmap(sobj1, features = epigenetic_modifiers) + NoLegend()
 
 DoHeatmap(sobj1, features = epigenetic_modifiers, group.by = 'New_cellType', size = 3, angle = 90)

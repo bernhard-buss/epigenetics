@@ -11,10 +11,7 @@ setup_seurat <- function(project, counts, metadata) {
   return(sobj)
 }
 
-add_celltype_metadata <- function(sobj, day_column='orig_ident', celltype_column='New_cellType', celltype_marker_lists) {
-  sobj <- map_metadata_column(sobj, source = day_column, target = 'Day', lambda = extract_prefix)
-  sobj <- map_metadata_column(sobj, source = celltype_column, target = 'Cell_Type', lambda = function(x) return(x))
-  
+add_celltype_metadata <- function(sobj, celltype_marker_lists) {
   # add _markers_score and _markers_score_norm for all celltypes
   for (celltype in names(celltype_marker_lists)) {
     sobj <- add_celltype_markers_score(sobj, celltype_marker_lists[[celltype]], celltype)

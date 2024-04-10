@@ -62,9 +62,8 @@ sobj2@meta.data$CellClass <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP"
                                            ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons",
                                                   ifelse(sobj2@meta.data$CellType == "Microglia", "Microglia", NA)))))
 
-sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"  # Adjust as necessary
+sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"
 
-days <- c("P1", "P7", "P21")
 
 # Filter mito %, genes # & nUMI
 sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
@@ -80,34 +79,20 @@ sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 # What markers are shared between 'my list' & 'Rodrigos list'
 relevant_markers <- intersect(as.vector(genes_chromatin$gene), Features(sobj2))
 
-sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
-Idents(sobj2_celltype) <- 'Day'
-
-filtered_chromatin_markers_all = FindAllMarkers(
-  object = sobj2_celltype,
-  features = relevant_markers,
-  #only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.5, # Gene must be detected in at least 25% of cells within a cluster
-  #min.diff.pct = 0.5,
-  logfc.threshold = 0.7, # Minimum log-fold change
-  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
-  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
-)
-
 unique(sobj2@meta.data$CellType)
 
 # Clustered by days across timepoints 
-sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
-all_markers_days <- FindAllMarkers(
-  object = sobj2_by_days,
-  features = relevant_markers,
-  only.pos = TRUE, # Consider only positive markers
-  min.pct = 0.25, #0.25, # Gene must be detected in at least 25% of cells within a cluster
+#sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
+#all_markers_days <- FindAllMarkers(
+#  object = sobj2_by_days,
+#  features = relevant_markers,
+#  only.pos = TRUE, # Consider only positive markers
+#  min.pct = 0.25, #0.25, # Gene must be detected in at least 25% of cells within a cluster
   #min.diff.pct = 0.5,
-  logfc.threshold = 0.25, #0.25, # Minimum log-fold change
-  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
-  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
-)
+#  logfc.threshold = 0.25, #0.25, # Minimum log-fold change
+#  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
+#  p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
+#)
 
 
 # Heatmaps
@@ -116,52 +101,90 @@ DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, an
 DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
 
 # Astrocytes
-dim(filtered_chromatin_markers_all)
-filtered_chromatin_markers_all_ordered <- filtered_chromatin_markers_all[order(filtered_chromatin_markers_all$cluster),]
-chromatin_markers_astrocytes = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='Astro',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-rownames(chromatin_markers_astrocytes)
+# P1 vs P7
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P7"))
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P7',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
+
+# P1 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
+
+# P7 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P7', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P7',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
 
 # Microglia
-chromatin_markers_microglia = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='Microglia',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_microglia), group.by = 'Day', size = 3, angle = 90) + ggtitle("Microglia")
+# Doesn't make sense to look at them because only clusters in P21
 
 # Oligodendrocytes
-chromatin_markers_OPCs = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='Oligos',
-  group.by='CellClass',
-  logfc.threshold = 1
-)
+# None in P1
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_OPCs), group.by = 'Day', size = 3, angle = 90) + ggtitle("Oligodendrocytes")
+# P7 vs P21
+sobj2_celltype <- subset(sobj2, subset = CellClass == 'Oligo')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P7', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P7',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Oligodendrocytes")
+
 
 # Pericytes
-chromatin_markers_pericytes = FindMarkers(
-  object = sobj2,
+# None in P1
+
+# P7 vs P21
+sobj2_celltype <- subset(sobj2, subset = CellClass == 'Pericytes')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P7', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
   features = relevant_markers,
-  ident.1='Pericytes',
-  group.by='Cell_Type',
-  logfc.threshold = 1
+  ident.1='P7',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
 )
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_pericytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Pericytes")
-
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Pericytes")
 
 
 
@@ -176,18 +199,17 @@ DoHeatmap(sobj2, features = rownames(chromatin_markers_pericytes), group.by = 'D
 
 
 
-#Astrocytes_Markers = FindMarkers(
-#  object = sobj2,
-#  features = relevant_markers,
-#  ident.1 = 'Astro',
-#  group.by = 'Day',
-#. logfc.threshold=1
-#)
 
 
-# Heatmaps
 
-DoHeatmap(object=sobj2_by_days, features = relevant_markers) + NoLegend()
+
+
+
+
+
+
+
+
 
 # add markers_score for all celltypes
 for (celltype in names(matches)) {

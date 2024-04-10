@@ -26,7 +26,7 @@ celltype_marker_lists2 <- list(
   InhibitoryNeurons = c('Gad1', 'Gad2', 'Slc32a1', 'Erbb4', 'Sst', 'Calb2', 'Vip'),
   OligodendrocytePrecursorCells = c('Fabp7', 'Ccnd1', 'Cspg4', 'Mdk', 'Ednrb', 'Pdgfra'),
   CommittedOligodendrocytePrecursors = c('Brca1', 'Pak4', 'Mycl', 'Pdcd4', 'Fyn', 'Bmp4', 'Epcam'),
-  NewlyFormedOligodendrocytes = c('Sema4d', 'Mob3b', 'Ddc', 'Cnksr3', 'Prom1', 'Fam107b', 'Tmem2', 'Rras2', 'Plekha1',
+  NewlyFormedOLigodendrocytes = c('Sema4d', 'Mob3b', 'Ddc', 'Cnksr3', 'Prom1', 'Fam107b', 'Tmem2', 'Rras2', 'Plekha1',
                                   'Kndc1', 'Slc9a3r2', 'Tmem141', 'Man1a', 'Prr5l', 'Aspa', 'Anln', 'Ndrg1'),
   Astrocytes = c('Aldh1l1', 'Slc1a3', 'Apoe', 'Gfap', 'Aqp4'),
   Microglia = c('Tmem119', 'Aif1'),
@@ -91,6 +91,13 @@ all_markers_days <- FindAllMarkers(
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
 
+
+# Heatmaps
+
+DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
+
+# Astrocytes
 dim(filtered_chromatin_markers_all)
 filtered_chromatin_markers_all_ordered <- filtered_chromatin_markers_all[order(filtered_chromatin_markers_all$cluster),]
 chromatin_markers_astrocytes = FindMarkers(
@@ -102,12 +109,80 @@ chromatin_markers_astrocytes = FindMarkers(
 )
 rownames(chromatin_markers_astrocytes)
 
-DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
-DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
 DoHeatmap(sobj2, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90)
 
+# Microglia
+chromatin_markers_microglia = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='Microglia',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
 
+DoHeatmap(sobj2, features = rownames(chromatin_markers_microglia), group.by = 'Day', size = 3, angle = 90)
 
+# Oligodendrocyte Precursor Cells
+chromatin_markers_OPCs = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='OPC',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_OPCs), group.by = 'Day', size = 3, angle = 90)
+# Committed Oligodendrocyte Precursors
+chromatin_markers_COPs = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='COP',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_COPs), group.by = 'Day', size = 3, angle = 90)
+# Myelin Forming OLigodendrocytes
+chromatin_markers_MFOLs = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='MFOL',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_MFOLs), group.by = 'Day', size = 3, angle = 90)
+# Maturated OLigodendrocytes
+chromatin_markers_MOLs = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='MOL',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_MOLs), group.by = 'Day', size = 3, angle = 90)
+# Newly Formed OLigodendrocytes
+chromatin_markers_NFOLs = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='NFOL',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_NFOLs), group.by = 'Day', size = 3, angle = 90)
+
+# Pericytes
+chromatin_markers_pericytes = FindMarkers(
+  object = sobj2,
+  features = relevant_markers,
+  ident.1='Pericytes',
+  group.by='Cell_Type',
+  logfc.threshold = 1
+)
+
+DoHeatmap(sobj2, features = rownames(chromatin_markers_pericytes), group.by = 'Day', size = 3, angle = 90)
 
 
 
@@ -269,7 +344,7 @@ cluster_marker_lists <- split(top_markers_per_cluster$gene, top_markers_per_clus
 
 
 ##################################################################################################
-# Heat Maps:
+# Heat Maps of Differentially Expressed Genes:
 
 for (cluster in names(genes_chromatin)) {
   markers <- cluster_marker_lists[[cluster]]
@@ -304,7 +379,7 @@ DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$gene)) + NoLegend()
           
 
 ##################################################################################################
-# Differential Expression: Of Astrocytes against most abundant 
+# Differential Gene Expression: Of Astrocytes against most abundant 
 
 # same TPs differ. CTs
 

@@ -1,7 +1,9 @@
 #install.packages('Seurat')
+BiocManager::install('EnhancedVolcano')
 library('Seurat')
 library('ggplot2')
 library(dplyr)
+library('EnhancedVolcano')
 
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
@@ -124,6 +126,46 @@ DoHeatmap(sobj1, features = celltype_marker_lists['cpnLayer56']) + NoLegend()
 
 
 # ANALYSIS: DGE for epigenetic modifiers/chromatin genes
+# for all celltypes
+relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))
+for (celltype in unique(sobj1@meta.data$Cell_Type)) {
+  perform_DGE_Two_Days(sobj1, celltype, genes=relevant_chromatin_genes, day1='E18', day2='P1')
+}
+# Manual single celltype
+# visualise the variable features being used
+celltype = 'CThPN'
+day1 = 'E18'
+day2 = 'P1'
+sobj_celltype <- subset(sobj1, subset = Cell_Type == celltype)
+Idents(sobj_celltype) <- 'Day'
+sobj_celltype <- subset(sobj_celltype, subset = Day %in% c(day1, day2))
+
+relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))
+
+filtered_chromatin_markers_days = FindMarkers(
+  object = sobj_celltype_day,
+  features = relevant_chromatin_genes,
+  ident.1 = day1,
+  ident.2 = day2,
+  min.pct = 0.25, # Gene must be detected in at least 25% of cells within a cluster
+  #min.diff.pct = 0.5,
+  logfc.threshold = 0.25, # Minimum log-fold change
+  test.use = 'wilcox', # Use Wilcoxon Rank Sum test
+  #p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
+)
+
+volcano_plot <- EnhancedVolcano(
+  filtered_chromatin_markers_days,
+  x='avg_log2FC', y='p_val',
+  lab=filtered_chromatin_markers_days$gene,
+  #pCutoff = 0.05
+) + ggtitle(paste0(celltype, ' DGE ', day1, ' vs ', day2)) +
+  theme(plot.title = element_text(hjust = 0.5))  # This centers the title
+#ggsave(figure_filename(sobj@project.name, 'DGE', paste0(celltype, '_DGE_per_day_volcano')), plot = volcano_plot, width = 10, height = 8, dpi = 300)
+
+filtered_chromatin_markers_days_significant = filtered_chromatin_markers_days[filtered_chromatin_markers_days$p_val < 0.05,]
+#write.csv(filtered_chromatin_markers_E18_P1_significant, file = table_filename(sobj1@project.name, 'E18_P1', paste0(celltype, '_E18_P1_DGE_markers')))
+
 # Heatmaps for epigenetic modifiers
 relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))
 for (celltype in unique(sobj1@meta.data$Cell_Type)) {

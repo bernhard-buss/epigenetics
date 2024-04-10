@@ -27,9 +27,10 @@ plot_gene_expression = function(sobj, genes, topic_suffix, celltype) {
   p <- ggplot(avg_expression_long, aes(x = Day, y = Expression, color = Gene, group = Gene)) +
     geom_line() +
     geom_point() +
-    theme_minimal() +
-    labs(title = paste0(celltype, ' ', topic_suffix, ": Expression of Genes Over Days"), x = "Day", y = "Average Expression") +
-    scale_color_viridis_d() # Use a color palette that provides distinct colors for each gene
+    theme_bw() +
+    #theme_minimal() +
+    labs(title = paste0(celltype, ' ', topic_suffix, ": Expression of Genes Over Days"), x = "Day", y = "Average Expression")
+    #scale_color_viridis_d() # Use a color palette that provides distinct colors for each gene
   
   # Save the plot
   ggsave(filename = figure_filename(sobj@project.name, topic, paste0(celltype, ' ', topic_suffix, "_Gene_Expression_Over_Days")), plot = p, width = 10, height = 8, dpi = 300)

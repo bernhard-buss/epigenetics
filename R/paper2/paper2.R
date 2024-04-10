@@ -160,7 +160,7 @@ chromatin_markers_pericytes = FindMarkers(
   logfc.threshold = 1
 )
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_pericytes), group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = rownames(chromatin_markers_pericytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Pericytes")
 
 
 

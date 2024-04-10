@@ -67,18 +67,9 @@ sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 
 # Combine all Oligodendrocyte cells in one column called Oligos
 
-# Define a new column in the metadata for the class
-sobj2@meta.data$CellClass <- NA
-
 # Fill the CellClass based on CellType
-sobj2@meta.data$CellClass <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL"), "Oligos",
-                                    ifelse(sobj2@meta.data$CellType %in% c("CPN"), "CPNs",
-                                           ifelse(sobj2@meta.data$CellType %in% c("CthPN"), "CthPNs",
-                                                  ifelse(sobj2@meta.data$CellType %in% c("SCPN"), "SCPNs",
-                                                         ifelse(sobj2@meta.data$CellType %in% c("Layer IV"), "LayerIVs",
-                                                                ifelse(sobj2@meta.data$CellType == "Pericytes", "Pericytes",
-                                                                       ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons",
-                                                                              ifelse(sobj2@meta.data$CellType == "Microglia", "Microglia", NA))))))))
+sobj2@meta.data$Cell_Type <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL"), "Oligodendrocytes",
+                               ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons", sobj2@meta.data$CellType))
 
 sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"
 
@@ -300,18 +291,32 @@ DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), gro
 
 for (celltype in unique(sobj2@meta.data$Cell_Type)) {
   tryCatch({
-    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P1', day2='P7')
-    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P7', day2='P21')
-    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P1', day2='P21')
+    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P7', logfc.threshold = 0.5)
+    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P7', day2='P21', logfc.threshold = 0.5)
+    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P21', logfc.threshold = 0.5)
   }, error = function(e) {
     # Code to run in case of an error
     cat("An error occurred:", e$message, "\n")
   })
 }
 
-
-
-
+# for days P1, P7, P21, and reference celltypes
+celltypes1 = c('Astro', 'Microglia', 'Oligodendrocytes', 'Interneurons', 'Pericytes', 'CPN', 'CthPN', 'LayerIV', 'SCPN')
+celltypes2 = c('Astro', 'Microglia', 'Oligodendrocytes', 'Interneurons', 'Pericytes', 'CPN', 'CthPN', 'LayerIV', 'SCPN')
+for (day in days) {
+  for (celltype1 in celltypes1) {
+    for (celltype2 in celltypes2) {
+      tryCatch({
+        if (celltype1 != celltype2) {
+          perform_DGE_two_celltypes(sobj2, genes=relevant_markers, day=day, celltype1=celltype1, celltype2=celltype2)
+        }
+      }, error = function(e) {
+        # Code to run in case of an error
+        cat("An error occurred:", e$message, "\n")
+      })
+    }
+  }
+}
 
 
 

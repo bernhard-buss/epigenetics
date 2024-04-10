@@ -49,6 +49,16 @@ sobj2_full <- setup_seurat(
 sobj2_full <- map_metadata_column(sobj2_full, source = 'timePoint', target = 'Day', lambda = extract_prefix)
 sobj2_full <- map_metadata_column(sobj2_full, source = 'CellType', target = 'Cell_Type', lambda = function(x) return(x))
 
+days <- c("P1", "P7", "P21")
+# Filter mito %, genes # & nUMI
+sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
+
+# Clustering (Normalizing, Scaling, PCA, Neighbours)
+sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
+
+# UMAPPlot(sobj2_full, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
+#sobj2 <- add_celltype_metadata(sobj2, celltype_marker_lists=celltype_marker_lists2)
+
 
 # Combine all Oligodendrocyte cells in one column called Oligos
 
@@ -67,22 +77,13 @@ sobj2@meta.data$CellClass <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP"
 
 sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"
 
-View()
-# Filter mito %, genes # & nUMI
-sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
-
-# Clustering (Normalizing, Scaling, PCA, Neighbours)
-sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
-
-# UMAPPlot(sobj2_full, group.by = 'Cell_Type_heuristic', split.by = 'Day', ncol = 4, pt.size = 1.1)
-#sobj2 <- add_celltype_metadata(sobj2, celltype_marker_lists=celltype_marker_lists2)
 
 # Markers
 
 # What markers are shared between 'my list' & 'Rodrigos list'
 relevant_markers <- intersect(as.vector(genes_chromatin$gene), Features(sobj2))
 
-unique(sobj2@meta.data$CellType)
+#unique(sobj2@meta.data$CellType)
 
 # Clustered by days across timepoints 
 #sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
@@ -100,8 +101,8 @@ unique(sobj2@meta.data$CellType)
 
 # Heatmaps
 
-DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
-DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
+#DoHeatmap(sobj2, features = epigenetic_modifiers, group.by = 'Day', size = 3, angle = 90)
+#DoHeatmap(sobj2, features = filtered_chromatin_markers_all$gene, group.by = 'Day', size = 3, angle = 90)
 
 # Astrocytes
 # P1 vs P7
@@ -237,12 +238,59 @@ chromatin_markers_astrocytes = FindMarkers(
   logfc.threshold = 0.5,
   min.pct = 0.25
 )
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Callosal Projection Neurons")
+
+# CthPNs
+# P1 vs P7
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CthPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P7"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P7',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Cortico-thalamic Projection Neurons")
+
+# P1 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CthPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Cortico-thalamic Projection Neurons")
+
+# P7 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CthPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P7', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P7',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Cortico-thalamic Projection Neurons")
+
+
+
+
+# Try to change place of P7 & P21
 sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
-DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
-
-
-
-
 
 
 

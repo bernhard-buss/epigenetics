@@ -158,6 +158,10 @@ for (day in days) {
   }
 }
 
+# plot marker expressions
+plot_gene_expression(sobj1, genes=astrocytes_011_genes, topic_suffix='011', celltype='Astrocytes')
+plot_gene_expression(sobj1, genes=astrocytes_110_genes, topic_suffix='110', celltype='Astrocytes')
+plot_gene_expression(sobj1, genes=astrocytes_111_genes, topic_suffix='111', celltype='Astrocytes')
 
 # Heatmaps for epigenetic modifiers
 relevant_chromatin_genes = intersect(as.vector(genes_chromatin$gene), Features(sobj1))

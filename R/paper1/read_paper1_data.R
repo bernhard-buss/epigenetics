@@ -31,3 +31,7 @@ read_paper1_metadata = function() {
   
   return (metadata)
 }
+
+astrocytes_011_genes = readLines('input/011_Astrocytes_E18_P4_DGE_markers_Astrocytes_P1_P4_DGE_markers.txt')
+astrocytes_110_genes = readLines('input/110_Astrocytes_E18_P1_DGE_markers_Astrocytes_E18_P4_DGE_markers.txt')
+astrocytes_111_genes = readLines('input/111_Astrocytes_E18_P1_DGE_markers_Astrocytes_E18_P4_DGE_markers_Astrocytes_P1_P4_DGE_markers.txt')

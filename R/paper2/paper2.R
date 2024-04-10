@@ -49,6 +49,21 @@ sobj2_full <- setup_seurat(
 sobj2_full <- map_metadata_column(sobj2_full, source = 'timePoint', target = 'Day', lambda = extract_prefix)
 sobj2_full <- map_metadata_column(sobj2_full, source = 'CellType', target = 'Cell_Type', lambda = function(x) return(x))
 
+
+# Combine all Oligodendrocyte cells in one column called Oligos
+
+# Define a new column in the metadata for the class
+sobj2@meta.data$CellClass <- NA
+
+# Fill the CellClass based on CellType
+sobj2@meta.data$CellClass <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL"), "Oligos",
+                             ifelse(sobj2@meta.data$CellType %in% c("CthPN", "CPN", "SCPN", "Layer IV"), "Excitatory neurons",
+                                    ifelse(sobj2@meta.data$CellType == "Pericytes", "Pericytes",
+                                           ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons",
+                                                  ifelse(sobj2@meta.data$CellType == "Microglia", "Microglia", NA)))))
+
+sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"  # Adjust as necessary
+
 days <- c("P1", "P7", "P21")
 
 # Filter mito %, genes # & nUMI
@@ -67,6 +82,7 @@ relevant_markers <- intersect(as.vector(genes_chromatin$gene), Features(sobj2))
 
 sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
 Idents(sobj2_celltype) <- 'Day'
+
 filtered_chromatin_markers_all = FindAllMarkers(
   object = sobj2_celltype,
   features = relevant_markers,
@@ -77,6 +93,8 @@ filtered_chromatin_markers_all = FindAllMarkers(
   test.use = 'wilcox', # Use Wilcoxon Rank Sum test
   p.adjust.method = 'bonferroni' # Bonferroni correction for multiple testing
 )
+
+unique(sobj2@meta.data$CellType)
 
 # Clustered by days across timepoints 
 sobj2_by_days <- map_metadata_column(sobj2, 'Day', 'seurat_clusters', function(x) return(x))
@@ -109,7 +127,7 @@ chromatin_markers_astrocytes = FindMarkers(
 )
 rownames(chromatin_markers_astrocytes)
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
 
 # Microglia
 chromatin_markers_microglia = FindMarkers(
@@ -120,58 +138,18 @@ chromatin_markers_microglia = FindMarkers(
   logfc.threshold = 1
 )
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_microglia), group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = rownames(chromatin_markers_microglia), group.by = 'Day', size = 3, angle = 90) + ggtitle("Microglia")
 
-# Oligodendrocyte Precursor Cells
+# Oligodendrocytes
 chromatin_markers_OPCs = FindMarkers(
   object = sobj2,
   features = relevant_markers,
-  ident.1='OPC',
-  group.by='Cell_Type',
+  ident.1='Oligos',
+  group.by='CellClass',
   logfc.threshold = 1
 )
 
-DoHeatmap(sobj2, features = rownames(chromatin_markers_OPCs), group.by = 'Day', size = 3, angle = 90)
-# Committed Oligodendrocyte Precursors
-chromatin_markers_COPs = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='COP',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_COPs), group.by = 'Day', size = 3, angle = 90)
-# Myelin Forming OLigodendrocytes
-chromatin_markers_MFOLs = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='MFOL',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_MFOLs), group.by = 'Day', size = 3, angle = 90)
-# Maturated OLigodendrocytes
-chromatin_markers_MOLs = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='MOL',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_MOLs), group.by = 'Day', size = 3, angle = 90)
-# Newly Formed OLigodendrocytes
-chromatin_markers_NFOLs = FindMarkers(
-  object = sobj2,
-  features = relevant_markers,
-  ident.1='NFOL',
-  group.by='Cell_Type',
-  logfc.threshold = 1
-)
-
-DoHeatmap(sobj2, features = rownames(chromatin_markers_NFOLs), group.by = 'Day', size = 3, angle = 90)
+DoHeatmap(sobj2, features = rownames(chromatin_markers_OPCs), group.by = 'Day', size = 3, angle = 90) + ggtitle("Oligodendrocytes")
 
 # Pericytes
 chromatin_markers_pericytes = FindMarkers(

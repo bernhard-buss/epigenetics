@@ -22,6 +22,12 @@ new_column_names <- c('gene', 'ID', 'whole_gene_name', 'function')
 names(genes_chromatin) <- new_column_names
 View(genes_chromatin)
 
+
+source('R/paper2/read_paper2_data.R')
+source('R/shared/index.R')
+source('R/paper2/celltypes_paper2.R')
+
+
 # Cell-Type Markers - list based off of paper
 celltype_marker_lists2 <- list(
   ProjectionNeurons = c('Neurod2', 'Neurod6', 'Tubb3', 'Tbr1', 'Cux2', 'Cux1', 'Satb2', 'Bhlhe22', 'Hspb3', 'Lmo4', 'Rorb',
@@ -37,9 +43,6 @@ celltype_marker_lists2 <- list(
   Pericytes = c('Pdgfrb')
 )
 
-source('R/paper2/read_paper2_data.R')
-source('R/shared/index.R')
-source('R/paper2/celltypes_paper2.R')
 
 # Seurat
 
@@ -308,7 +311,7 @@ for (day in days) {
     for (celltype2 in celltypes2) {
       tryCatch({
         if (celltype1 != celltype2) {
-          perform_DGE_two_celltypes(sobj2, genes=relevant_markers, day=day, celltype1=celltype1, celltype2=celltype2)
+          perform_DGE_two_celltypes(sobj2, genes=relevant_markers, day=day, celltype1=celltype1, celltype2=celltype2, logfc.threshold = 0.5)
         }
       }, error = function(e) {
         # Code to run in case of an error

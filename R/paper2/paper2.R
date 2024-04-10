@@ -57,14 +57,17 @@ sobj2@meta.data$CellClass <- NA
 
 # Fill the CellClass based on CellType
 sobj2@meta.data$CellClass <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL"), "Oligos",
-                             ifelse(sobj2@meta.data$CellType %in% c("CthPN", "CPN", "SCPN", "Layer IV"), "Excitatory neurons",
-                                    ifelse(sobj2@meta.data$CellType == "Pericytes", "Pericytes",
-                                           ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons",
-                                                  ifelse(sobj2@meta.data$CellType == "Microglia", "Microglia", NA)))))
+                                    ifelse(sobj2@meta.data$CellType %in% c("CPN"), "CPNs",
+                                           ifelse(sobj2@meta.data$CellType %in% c("CthPN"), "CthPNs",
+                                                  ifelse(sobj2@meta.data$CellType %in% c("SCPN"), "SCPNs",
+                                                         ifelse(sobj2@meta.data$CellType %in% c("Layer IV"), "LayerIVs",
+                                                                ifelse(sobj2@meta.data$CellType == "Pericytes", "Pericytes",
+                                                                       ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons",
+                                                                              ifelse(sobj2@meta.data$CellType == "Microglia", "Microglia", NA))))))))
 
 sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"
 
-
+View()
 # Filter mito %, genes # & nUMI
 sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
 
@@ -116,6 +119,9 @@ chromatin_markers_astrocytes = FindMarkers(
 )
 DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
 
+# extract gene names & export in txt.file 
+chromatin_markers_astrocytes
+
 # P1 vs P21
 sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'Astro')
 Idents(sobj2_celltype) <- 'Day'
@@ -144,6 +150,7 @@ chromatin_markers_astrocytes = FindMarkers(
   logfc.threshold = 0.5,
   min.pct = 0.25
 )
+sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
 DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
 
 # Microglia
@@ -186,9 +193,52 @@ chromatin_markers_astrocytes = FindMarkers(
 )
 DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Pericytes")
 
+# CPNs
+# P1 vs P7
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P7"))
 
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P7',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Callosal Projection Neurons")
 
+# P1 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P1', "P21"))
 
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P1',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Callosal Projection Neurons")
+
+# P7 vs P21
+sobj2_celltype <- subset(sobj2, subset = Cell_Type == 'CPN')
+Idents(sobj2_celltype) <- 'Day'
+sobj2_celltype <- subset(sobj2_celltype, subset = Day %in% c('P7', "P21"))
+
+chromatin_markers_astrocytes = FindMarkers(
+  object = sobj2_celltype,
+  features = relevant_markers,
+  ident.1='P7',
+  ident.2='P21',
+  logfc.threshold = 0.5,
+  min.pct = 0.25
+)
+sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
+DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Astrocytes")
 
 
 

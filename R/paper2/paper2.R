@@ -289,16 +289,16 @@ DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), gro
 #sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
 
 
-for (celltype in unique(sobj2@meta.data$Cell_Type)) {
-  tryCatch({
-    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P7', logfc.threshold = 0.5)
-    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P7', day2='P21', logfc.threshold = 0.5)
-    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P21', logfc.threshold = 0.5)
-  }, error = function(e) {
-    # Code to run in case of an error
-    cat("An error occurred:", e$message, "\n")
-  })
-}
+#for (celltype in unique(sobj2@meta.data$Cell_Type)) {
+#  tryCatch({
+#    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P7', logfc.threshold = 0.5)
+#    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P7', day2='P21', logfc.threshold = 0.5)
+#    perform_DGE_two_days(sobj2, genes=relevant_markers, celltype=celltype, day1='P1', day2='P21', logfc.threshold = 0.5)
+#  }, error = function(e) {
+#    # Code to run in case of an error
+#    cat("An error occurred:", e$message, "\n")
+#  })
+#}
 
 # for days P1, P7, P21, and reference celltypes
 celltypes1 = c('Astro', 'Microglia', 'Oligodendrocytes', 'Interneurons', 'Pericytes', 'CPN', 'CthPN', 'LayerIV', 'SCPN')

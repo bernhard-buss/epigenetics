@@ -25,6 +25,7 @@ View(genes_chromatin)
 
 source('R/paper2/read_paper2_data.R')
 source('R/shared/index.R')
+source('R/shared/plot_gene_expression.R')
 source('R/paper2/celltypes_paper2.R')
 
 
@@ -71,11 +72,9 @@ sobj2 <- cluster_seurat(sobj2, dims=1:35, resolution=0.3, nn.eps=0.5)
 # Combine all Oligodendrocyte cells in one column called Oligos
 
 # Fill the CellClass based on CellType
-sobj2@meta.data$Cell_Type <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL"), "Oligodendrocytes",
-                               ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons", sobj2@meta.data$CellType))
-
-sobj2@meta.data$CellClass[sobj2@meta.data$CellType == "Undetermined"] <- "Undetermined"
-
+sobj2@meta.data$Cell_Type <- ifelse(sobj2@meta.data$CellType %in% c("OPC", "COP", "MOL", "MFOL", "NFOL"), "Oligodendrocytes",
+                                    ifelse(sobj2@meta.data$CellType %in% c("Inh_Sst", "Inh_CGE", "Inh_Npy", "Inh_MGE", "Inh_Vip"), "Interneurons", 
+                                           ifelse(sobj2@meta.data$CellType %in% c("Astro"), "Astrocytes", sobj2@meta.data$CellType)))
 
 # Markers
 
@@ -318,6 +317,40 @@ for (day in days) {
     }
   }
 }
+
+
+# Line Plots
+
+plot_gene_expression(sobj2, genes=astrocytes_011_genes, topic_suffix='011', celltype='Astro')
+plot_gene_expression(sobj2, genes=astrocytes_110_genes, topic_suffix='110', celltype='Astro')
+plot_gene_expression(sobj2, genes=astrocytes_111_genes, topic_suffix='111', celltype='Astro')
+
+
+# Barplot of Cell-type Expression across Timepoints
+
+# Format
+metadata_df <- sobj2@meta.data %>% 
+  as.data.frame() %>% 
+  mutate(cell_type = as.character(Idents(sobj2))) %>%
+  count(timePoint, Cell_Type)  # Replace 'time_point' with the actual column name
+
+# Plot
+plot <- ggplot(metadata_df, aes(x = timePoint, y = n, fill = Cell_Type)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(x = "Time Point", y = "Cell Count", fill = "Cell Type") +
+  coord_flip() +  # Flips the x and y axes
+  theme(legend.position = "bottom")
+  
+  
+
+
+
+
+
+
+
+
 
 
 

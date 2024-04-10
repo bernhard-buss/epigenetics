@@ -286,8 +286,6 @@ chromatin_markers_astrocytes = FindMarkers(
 DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), group.by = 'Day', size = 3, angle = 90) + ggtitle("Cortico-thalamic Projection Neurons")
 
 
-
-
 # Try to change place of P7 & P21
 #sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
 
@@ -311,7 +309,7 @@ for (day in days) {
     for (celltype2 in celltypes2) {
       tryCatch({
         if (celltype1 != celltype2) {
-          perform_DGE_two_celltypes(sobj2, genes=relevant_markers, day=day, celltype1=celltype1, celltype2=celltype2, logfc.threshold = 0.5)
+          perform_DGE_two_celltypes(sobj2, genes=relevant_markers, day=day, celltype1=celltype1, celltype2=celltype2, min.pct = 0.5, logfc.threshold = 1)
         }
       }, error = function(e) {
         # Code to run in case of an error

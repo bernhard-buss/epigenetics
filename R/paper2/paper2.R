@@ -7,6 +7,10 @@ library(Seurat)
 library(patchwork)
 library(Matrix)
 library(tidyr)
+BiocManager::install('EnhancedVolcano')
+BiocManager::install('dittoSeq')
+library(EnhancedVolcano)
+library(dittoSeq)
 
 # genes list by Rodrigo
 genes_chromatin <- read.csv("input/genes_chromatin_mm39.csv")
@@ -50,6 +54,7 @@ sobj2_full <- map_metadata_column(sobj2_full, source = 'timePoint', target = 'Da
 sobj2_full <- map_metadata_column(sobj2_full, source = 'CellType', target = 'Cell_Type', lambda = function(x) return(x))
 
 days <- c("P1", "P7", "P21")
+
 # Filter mito %, genes # & nUMI
 sobj2 <- subset(sobj2_full, subset = percent.mito < 0.1 & nGene < 6000 & nGene > 1000 & nUMI < 15000 & Day %in% days)
 
@@ -290,10 +295,19 @@ DoHeatmap(sobj2_celltype, features = rownames(chromatin_markers_astrocytes), gro
 
 
 # Try to change place of P7 & P21
-sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
+#sobj2_celltype$Day $ factor(sobj2_celltype$Day, levels=rev(levels(sobj2_celltype$Day)))
 
 
-
+for (celltype in unique(sobj2@meta.data$Cell_Type)) {
+  tryCatch({
+    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P1', day2='P7')
+    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P7', day2='P21')
+    perform_DGE_Two_Days(sobj2, celltype, genes=relevant_markers, day1='P1', day2='P21')
+  }, error = function(e) {
+    # Code to run in case of an error
+    cat("An error occurred:", e$message, "\n")
+  })
+}
 
 
 

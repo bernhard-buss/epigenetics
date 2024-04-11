@@ -43,7 +43,7 @@ sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_list
 
 # plott celltypes over days as bar plot per day
 # Idents(sobj1) <- 'Cell_Type'
-plot = plot_celltype_per_day(sobj1)
+plot = plot_celltype_per_day(sobj1, color_palette=celltype_colors)
 plot
 
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')

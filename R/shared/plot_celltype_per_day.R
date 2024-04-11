@@ -4,7 +4,7 @@ library(ggplot2)
 
 source('R/shared/filenames.R')
 
-plot_celltype_per_day = function (sobj) {
+plot_celltype_per_day = function (sobj, color_palette) {
   # Extract metadata including Day and Cell_Type
   metadata_df = as.data.frame(sobj@meta.data)
   metadata_df$Day <- factor(metadata_df$Day, levels = rev(unique(metadata_df$Day)))
@@ -14,7 +14,7 @@ plot_celltype_per_day = function (sobj) {
   plot <- ggplot(metadata_df, aes(x = Day, y = n, fill = Cell_Type)) + 
     geom_bar(stat = "identity") +
     theme_bw() +
-    scale_fill_manual(values = custom_palette) +
+    scale_fill_manual(values = color_palette) +
     #scale_fill_viridis_d(option = "D") +
     labs(x="Day", y="Cell Count", fill="Cell Type", title='Cell type counts for each day') +
     coord_flip() +  # Flips the x and y axes

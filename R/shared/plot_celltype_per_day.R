@@ -22,4 +22,6 @@ plot_celltype_per_day = function (sobj) {
   
   # Save the plot
   ggsave(figure_filename(sobj@project.name, 'celltypes', "cell_type_composition_by_day"), plot = plot, width = 10, height = 8, dpi = 300)
+
+  return(plot)
 }

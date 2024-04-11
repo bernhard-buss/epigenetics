@@ -7,7 +7,6 @@ library(dplyr)
 library('EnhancedVolcano')
 library('dittoSeq')
 library(RColorBrewer)
-display.brewer.all(type = "qual")  # Show qualitative palettes
 
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
@@ -44,8 +43,9 @@ sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_list
 
 # plott celltypes over days as bar plot per day
 # Idents(sobj1) <- 'Cell_Type'
-plot_celltype_per_day(sobj1)
+plot = plot_celltype_per_day(sobj1)
 plot
+
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 

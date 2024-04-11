@@ -13,7 +13,7 @@ custom_palette <- c(
   "firebrick2",
   "darkolivegreen2",
   "sienna",
-  "darkgoldenrod4",
+  "brown3",
   "dodgerblue3",
   "yellow3",
   "orange2"

@@ -6,6 +6,8 @@ library('ggplot2')
 library(dplyr)
 library('EnhancedVolcano')
 library('dittoSeq')
+library(RColorBrewer)
+display.brewer.all(type = "qual")  # Show qualitative palettes
 
 source('R/shared/index.R')
 source('R/paper1/read_paper1_data.R')
@@ -31,7 +33,7 @@ sobj1_full <- map_metadata_column(sobj1_full, source = 'New_cellType', target = 
 #sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Cell_Type %in% celltypes_paper1 & Phase == 'G1')
 days = c("E16", "E17", "E18", "P1", "P4")
 #unique(FetchData(sobj1, 'Day')$Day)
-sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Day %in% days)
+sobj1 <- subset(sobj1_full, subset = percent_mito < 0.075 & nFeature_RNA > 500 & Cell_Type %in% celltypes_paper1 & Day %in% days)
 
 sobj1 <- cluster_seurat(sobj1, nfeatures=3000, resolution=1)
 sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_lists)
@@ -40,6 +42,10 @@ sobj1 <- add_celltype_metadata(sobj1, celltype_marker_lists=celltype_marker_list
 # ANALYSIS
 # Plotting & Analysis
 
+# plott celltypes over days as bar plot per day
+# Idents(sobj1) <- 'Cell_Type'
+plot_celltype_per_day(sobj1)
+plot
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters_orig')
 DimPlot(sobj1, reduction = "umap", group.by = 'seurat_clusters', label = TRUE)
 

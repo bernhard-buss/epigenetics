@@ -1,6 +1,7 @@
 source('R/shared/add_celltype_markers_score.R')
 source('R/shared/assign_cell_types.R')
 source('R/shared/celltype_markers.R')
+source('R/shared/colorpalettes.R')
 source('R/shared/filenames.R')
 source('R/shared/genes_chromatin.R')
 source('R/shared/map_metadata_column.R')

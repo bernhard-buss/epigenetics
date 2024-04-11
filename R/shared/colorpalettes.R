@@ -1,0 +1,1 @@
+custom_palette <- c("gold1", "aquamarine4", "mediumpurple3", "indianred", "palevioletred", "sandybrown", "cyan3", "darkslateblue", "salmon2", "royalblue2", "palegreen4", "firebrick2", "darkolivegreen2", "sienna", "darkgoldenrod4", "azure4")

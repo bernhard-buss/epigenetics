@@ -14,7 +14,7 @@ custom_palette <- c(
   "darkolivegreen2",
   "sienna",
   "darkgoldenrod4",
-  "azure4",
+  "dodgerblue3",
   "yellow3",
   "orange2"
 )
@@ -40,5 +40,9 @@ celltype_colors = c(
   'Pericytes' = custom_palette[4],
   'Red blood cells' = custom_palette[12],
   'SCPN' = custom_palette[8],
-  'VLMC' = custom_palette[18]
+  'VLMC' = custom_palette[18],
+  #paper2
+  "CPN" = custom_palette[2],
+  'Layer IV' = custom_palette[7],
+  'CthPN' = custom_palette[3]
 )

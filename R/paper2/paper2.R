@@ -321,10 +321,11 @@ for (day in days) {
 
 # Line Plots
 
-plot_gene_expression(sobj2, genes=astrocytes_011_genes, topic_suffix='011', celltype='Astro')
-plot_gene_expression(sobj2, genes=astrocytes_110_genes, topic_suffix='110', celltype='Astro')
-plot_gene_expression(sobj2, genes=astrocytes_111_genes, topic_suffix='111', celltype='Astro')
-
+plot_gene_expression(sobj2, genes=astrocytes_011_genes, topic_suffix='', celltype='Astro')
+plot_gene_expression(sobj2, genes=astrocytes_110_genes, topic_suffix='', celltype='CPN')
+plot_gene_expression(sobj2, genes=astrocytes_111_genes, topic_suffix='', celltype='LayerIV')
+plot_gene_expression(sobj2, genes=astrocytes_110_genes, topic_suffix='', celltype='OPC')
+plot_gene_expression(sobj2, genes=astrocytes_111_genes, topic_suffix='', celltype='SCPN')
 
 # Barplot of Cell-type Expression across Timepoints
 
@@ -332,23 +333,21 @@ plot_gene_expression(sobj2, genes=astrocytes_111_genes, topic_suffix='111', cell
 metadata_df <- sobj2@meta.data %>% 
   as.data.frame() %>% 
   mutate(cell_type = as.character(Idents(sobj2))) %>%
-  count(timePoint, Cell_Type)  # Replace 'time_point' with the actual column name
+  count(Day, Cell_Type)  # Replace 'time_point' with the actual column name
+
+# Change order of Time Points
+levels(metadata_df$Day)
+metadata_df$Day <- factor(metadata_df$Day, levels=c("P21", "P7", "P1"))
 
 # Plot
-plot <- ggplot(metadata_df, aes(x = timePoint, y = n, fill = Cell_Type)) + 
+plot <- ggplot(metadata_df, aes(x = Day, y = n, fill = Cell_Type)) + 
   geom_bar(stat = "identity") +
   theme_bw() +
-  labs(x = "Time Point", y = "Cell Count", fill = "Cell Type") +
+  scale_fill_manual(values=celltype_colors) +
+  labs(x = "Day", y = "Cell Count", fill = "Cell Type", title="Cell type counts for each day") +
   coord_flip() +  # Flips the x and y axes
   theme(legend.position = "bottom")
   
-  
-
-
-
-
-
-
 
 
 
@@ -372,52 +371,7 @@ celltype_markers_score_features = sapply(names(celltype_marker_lists2), celltype
 plot_feature_set(sobj2, celltype_markers_score_features, 'celltype_markers_scores', ncol = 6)
 
 
-
-
-
-
-
-##################################################################################################
-# Cell-Type Identification:
-
-#################################################################################################
-# Barplot of Cell-Type Composition per Time Point:
-head(sobj2)
-
-
-
-timePoint <- sobj2@meta.data$timePoint
-CellType <- sobj2@meta.data$CellType
-topics <- sobj2@meta.data$topics
-
-# Create a data frame with relevant information
-df <- data.frame(Timepoint = timePoint, Cell_Type = CellType, Topic = topics)
-
-# Optionally, you might want to summarize your data to get counts of cells per combination of timepoint, cell type, and topic
-# For example, using dplyr:
-library(dplyr)
-df_summary <- df %>%
-  group_by(Timepoint, Cell_Type, Topic) %>%
-  summarise(Count = n())
-
-
-
-
-# Create the bar plot
-ggplot(df_summary, aes(x = Timepoint, y = Count, fill = Cell_Type)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~Topic) +
-  labs(title = "Bar Plot of Cell Types Across Timepoints",
-       x = "Timepoint",
-       y = "Count",
-       fill = "Cell Type") +
-  theme_minimal()
-
-
-
-
-
-
+# UMAP of different Cell Types across different Time Points
 CT_TP_plot <- DimPlot(sobj2, reduction="umap", group.by = "CellType", split.by="timePoint", label=T, repel=TRUE) + NoLegend() 
 
 umap_coords <- CT_TP_plot$sobj2
@@ -430,7 +384,6 @@ ggplot(umap_coords, aes(x='CellType', y='timePoint', fill='CellType')) +
   theme_minimal()
 
 
-
 ggplot(umap_coords, aes(x = "timePoint", y = "CellType")) +
   geom_bin2d() +
   labs(title = "Cell-Types at Different Time Points",
@@ -438,8 +391,9 @@ ggplot(umap_coords, aes(x = "timePoint", y = "CellType")) +
        y = "CellType") +
   theme_minimal()
 
-##################################################################################################
-# Feature Map:
+
+# Feature Map
+
 # Cluster Identification
 # DimPlot(sobj2, reduction="umap", group.by = "CellType")
 # DimPlot(sobj2, reduction="umap", group.by = "timePoint")
@@ -465,13 +419,6 @@ for (celltype_markers in names(matches)) {
 # head(cluster1.markers, n = 5)
 
 
-
-
-
-
-# head(all_markers)
-# print(rownames(all_markers))
-
 # Filter markers based on adjusted P-value < 0.05
 significant_markers <- all_markers[all_markers$p_val_adj < 0.05, ]
 # head(significant_markers)
@@ -494,8 +441,7 @@ top_markers_per_cluster
 cluster_marker_lists <- split(top_markers_per_cluster$gene, top_markers_per_cluster$cluster)
 
 
-##################################################################################################
-# Heat Maps of Differentially Expressed Genes:
+# Heat Maps of Differentially Expressed Genes
 
 for (cluster in names(genes_chromatin)) {
   markers <- cluster_marker_lists[[cluster]]
@@ -527,24 +473,7 @@ genes <- as.vector(genes_chromatin$gene)
 
 DoHeatmap(object=sobj2, features = as.vector(genes_chromatin$gene)) + NoLegend()
 
-          
-
-##################################################################################################
-# Differential Gene Expression: Of Astrocytes against most abundant 
-
-# same TPs differ. CTs
-
-# Plot heatmap, sufficient # of genes, visually clear
-
-# 1 c. type over differ. days
-
-
-
-
-
-
-
-
+  
 #FeaturePlot(sobj2, features = CPN_markers , ncol = 2, order = TRUE)
 #VlnPlot(sobj2, features = CPN_markers, ncol = 2)
 
